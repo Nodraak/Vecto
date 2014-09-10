@@ -1,99 +1,203 @@
 
 
-
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <allegro.h>
 
-#define MOUSE_LEFT (1 << 0)
+
+#define MOUSE_LEFT  (1 << 0)
 #define MOUSE_RIGHT (1 << 1)
 
+
+#define NB_FORM     1000
 
 enum e_state
 {
     E_STATE_WAIT,
-    E_STATE_DRAW_WAIT,
+    E_STATE_DRAW_WAIT
 };
 
 
-int main(void)
+typedef struct      s_vector
 {
-    int quit = 0, screenRefresh = 1;
-    enum e_state state = E_STATE_WAIT;
+    int             x;
+    int             y;
+}                   t_vector;
 
+typedef struct      s_form
+{
+    int             used;
+    t_vector        p1;
+    t_vector        p2;
+}                   t_form;
+
+typedef struct      s_event
+{
+    t_vector        mousePos;
+    int             mouseLeft;
+    int             mouseRight;
+    enum e_state    state;
+    int             forceScreenRefresh;
+    /* todo : keyboard */
+}                   t_event;
+
+
+/* croix rouge de la fenetre */
+int global_quit = 0;
+void close_button_handler(void);
+void close_button_handler(void) { global_quit = 1; }
+
+
+void ft_init_allegro(void);
+
+void ft_init_allegro(void)
+{
     if (allegro_init() != 0)
-        return 1;
+        exit(EXIT_FAILURE);
 
     set_color_depth(32);
     if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 800, 600, 0, 0) != 0)
     {
         set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
         allegro_message("Unable to set any graphic mode - %s\n", allegro_error);
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     install_keyboard();
-    int nb = install_mouse();
+    install_mouse();
 
-    printf("%d\n", nb);
+    set_close_button_callback(close_button_handler);
+    show_mouse(screen);
+}
 
-    while (!quit)
+
+void ft_event_update(t_event *event);
+
+void ft_event_update(t_event *event)
+{
+    static t_event old = {{0}};
+
+    event->mousePos.x = mouse_x;
+    event->mousePos.y = mouse_y;
+
+    if ((mouse_b & MOUSE_LEFT) && (old.mouseLeft == 0))
     {
-
-        // event
-
-
-        // calcssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAz7mICuGpBlw4B6aqOpl7fK71tzltsCPd5EJbhkhqdIyUJU1g1/Gaz6X0CCi99yuhi8FzvMp6FXEnoJ7jiUIq08eVkjldPtmLGUaSzRWDqNz2S/DZ1EeObrE/Ffaow/qnl+TPh3gCMHExslObrNKT8C8x1Ewd25NEIgBQ5ZhZPVGp9xxMwdytbiE0UquN6jI3z6zOYA/lsj3w2sLkGNYp7mBp1hJC/Sw9B6ZpVvDMtgTw6uF7ofI9Yx0+feuDPRod2gOxZ0hphu8cAJkRTWmBpAk5aV29bwbFsgzSaW2YCP8WW0++HJOiIo7thwwkyE7dxsRV6XbuoVEMgZe4/dSd5w== adrienchardon@mailoo.org
-
-        if (mouse_b & MOUSE_LEFT)
-        {
-            if (state == E_STATE_WAIT)
-            {
-                // draw start
-
-                state = E_STATE_DRAW_WAIT;
-            }
-            else if (state == E_STATE_DRAW_WAIT)
-            {
-                // draw end
-
-                state = E_STATE_WAIT;
-            }
-        }
-
-        if (mouse_b & MOUSE_LEFT)
-        {
-            state = E_STATE_WAIT;
-        }
-
-
-
-
-        // draw
-        if (screenRefresh)
-        {
-            clear_to_color(screen, makecol(255, 255, 255));
-
-            acquire_screen();
-            line(screen, 0, 0, 200, 200, makecol(255, 0, 0));
-            textout_centre_ex(screen, font, "Hello world !", SCREEN_W/2, SCREEN_H/2, makecol(0, 0, 0), -1);
-            release_screen();
-
-            screenRefresh = 0;
-        }
-
-        // if (readkey())
-            //quit = 1;
+        event->mouseLeft = 1;
+        old.mouseLeft = 1;
+    }
+    if ((mouse_b & MOUSE_LEFT) == 0 && (old.mouseLeft == 1))
+    {
+        event->mouseLeft = 0;
+        old.mouseLeft = 0;
     }
 
-    // readkey();
+    if ((mouse_b & MOUSE_RIGHT) && (old.mouseRight == 0))
+    {
+        event->mouseRight = 1;
+        old.mouseRight = 1;
+    }
+    if ((mouse_b & MOUSE_RIGHT) == 0 && (old.mouseRight == 1))
+    {
+        event->mouseRight = 0;
+        old.mouseRight = 0;
+    }
+
+    if (key[KEY_SPACE])
+        global_quit = 0;
+}
 
 
+int main(void)
+{
+    t_form form[NB_FORM];
+    memset(form, 0, sizeof(t_form)*NB_FORM);
+
+    t_vector tmp;
+
+    t_event event;
+    memset(&event, 0, sizeof(t_event));
+    event.state = E_STATE_WAIT;
+    event.forceScreenRefresh = 1;
+
+    ft_init_allegro();
+
+    while (!global_quit)
+    {
+
+        /* event */
+        ft_event_update(&event);
+
+        /* calc */
+        if (event.mouseLeft)
+        {
+            event.mouseLeft = 0;
+
+            if (event.state == E_STATE_WAIT)
+            {
+
+                /* draw start */
+                tmp.x = mouse_x;
+                tmp.y = mouse_y;
+
+                event.state = E_STATE_DRAW_WAIT;
+            }
+            else if (event.state == E_STATE_DRAW_WAIT)
+            {
+                /* draw end */
+                int i = 0;
+                while (form[i].used)
+                    i++;
+                form[i].p1.x = tmp.x;
+                form[i].p1.y = tmp.y;
+                form[i].p2.x = mouse_x;
+                form[i].p2.y = mouse_y;
+                form[i].used = 1;
+
+                event.forceScreenRefresh = 1;
+
+                event.state = E_STATE_WAIT;
+            }
+        }
+
+        if (event.mouseRight)
+        {
+            event.mouseRight = 0;
+            event.state = E_STATE_WAIT;
+            event.forceScreenRefresh = 1;
+        }
 
 
+        /* draw */
+        if (event.forceScreenRefresh || (event.state == E_STATE_DRAW_WAIT))
+        {
+            int i;
+
+            event.forceScreenRefresh = 0;
+
+            acquire_screen();
+
+            clear_to_color(screen, makecol(255, 255, 255));
+            for (i = 0; i < NB_FORM; ++i)
+            {
+                if (form[i].used)
+                    line(screen, form[i].p1.x, form[i].p1.y, form[i].p2.x, form[i].p2.y, makecol(255, 0, 0));
+            }
+
+            if (event.state == E_STATE_DRAW_WAIT)
+                line(screen, tmp.x, tmp.y, mouse_x, mouse_y, makecol(255, 0, 0));
+
+            release_screen();
 
 
+/* textout_centre_ex(screen, font, "Hello world !", SCREEN_W/2, SCREEN_H/2, makecol(0, 0, 0), -1); */
+
+        }
+
+        rest(1000/50);
+    }
+
+    allegro_exit();
 
 
     return 0;
