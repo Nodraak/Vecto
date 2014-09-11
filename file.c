@@ -32,6 +32,9 @@ void ft_file_load(t_form form[NB_FORM], char *path)
         i++;
     }
 
+    for (; i < NB_FORM; ++i)
+        form[i].used = 0;
+
     fclose(f);
 }
 

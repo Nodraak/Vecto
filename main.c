@@ -7,7 +7,10 @@
 
 #include "constantes.h"
 #include "file.h"
+#include "draw.h"
 
+
+BITMAP *page = NULL;
 
 /* croix rouge de la fenetre */
 int global_quit = 0;
@@ -23,7 +26,7 @@ void ft_init_allegro(void)
         exit(EXIT_FAILURE);
 
     set_color_depth(32);
-    if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 800, 600, 0, 0) != 0)
+    if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0) != 0)
     {
         set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
         allegro_message("Unable to set any graphic mode - %s\n", allegro_error);
@@ -35,6 +38,14 @@ void ft_init_allegro(void)
 
     set_close_button_callback(close_button_handler);
     show_mouse(screen);
+
+    page = create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
+    if (page == NULL)
+    {
+        fprintf(stderr, "Error create tmp screen.\n");
+        exit(EXIT_FAILURE);
+    }
+
 }
 
 
@@ -71,32 +82,49 @@ void ft_event_update(t_event *event)
 }
 
 
-void ft_draw_button(t_rect button, int colorDefault, int colorHover, t_vector mousePos);
+void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *button_load, t_rect *button_save);
 
-
-void ft_draw_button(t_rect button, int colorDefault, int colorHover, t_vector mousePos)
+void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *button_load, t_rect *button_save)
 {
-    if (mousePos.x > button.x && mousePos.x < button.x+button.width && mousePos.y > button.y && mousePos.y < button.y+button.height)
-        rectfill(screen, button.x, button.y, button.x+button.width, button.y+button.height, colorHover);
-    else
-        rectfill(screen, button.x, button.y, button.x+button.width, button.y+button.height, colorDefault);
+    if (ft_is_mouse_in_rect(button_load, event->mousePos))
+    {
+        ft_file_load(form, "data.vecto");
+        event->mouseLeft = 0;
+    }
+    else if (ft_is_mouse_in_rect(button_save, event->mousePos))
+    {
+        ft_file_save(form, "data.vecto");
+        event->mouseLeft = 0;
+    }
+    else if (event->state == E_STATE_WAIT)
+    {
+        /* draw start */
+        event->current_line.x = mouse_x;
+        event->current_line.y = mouse_y;
+
+        event->state = E_STATE_DRAW_WAIT;
+        event->mouseLeft = 0;
+    }
+    else if (event->state == E_STATE_DRAW_WAIT)
+    {
+        /* draw end */
+        int i = 0;
+        while (form[i].used)
+            i++;
+        form[i].p1.x = event->current_line.x;
+        form[i].p1.y = event->current_line.y;
+        form[i].p2.x = mouse_x;
+        form[i].p2.y = mouse_y;
+        form[i].used = 1;
+
+        event->state = E_STATE_WAIT;
+        event->mouseLeft = 0;
+    }
 }
-
-
-int ft_is_mouse_in_rect(t_rect rect, t_vector mousePos);
-
-
-int ft_is_mouse_in_rect(t_rect rect, t_vector mousePos)
-{
-    return (mousePos.x > rect.x && mousePos.x < rect.x+rect.width && mousePos.y > rect.y && mousePos.y < rect.y+rect.height);
-}
-
 
 
 int main(void)
 {
-    t_vector tmp;
-
     t_form form[NB_FORM];
     memset(form, 0, sizeof(t_form)*NB_FORM);
 
@@ -118,42 +146,7 @@ int main(void)
 
         /* calc */
         if (event.mouseLeft)
-        {
-            if (ft_is_mouse_in_rect(button_load, event.mousePos))
-            {
-                ft_file_load(form, "data.vecto");
-                event.mouseLeft = 0;
-            }
-            else if (ft_is_mouse_in_rect(button_save, event.mousePos))
-            {
-                ft_file_save(form, "data.vecto");
-                event.mouseLeft = 0;
-            }
-            else if (event.state == E_STATE_WAIT)
-            {
-                /* draw start */
-                tmp.x = mouse_x;
-                tmp.y = mouse_y;
-
-                event.state = E_STATE_DRAW_WAIT;
-                event.mouseLeft = 0;
-            }
-            else if (event.state == E_STATE_DRAW_WAIT)
-            {
-                /* draw end */
-                int i = 0;
-                while (form[i].used)
-                    i++;
-                form[i].p1.x = tmp.x;
-                form[i].p1.y = tmp.y;
-                form[i].p2.x = mouse_x;
-                form[i].p2.y = mouse_y;
-                form[i].used = 1;
-
-                event.state = E_STATE_WAIT;
-                event.mouseLeft = 0;
-            }
-        }
+            ft_calc_on_mouseLeft(&event, form, &button_load, &button_save);
 
         if (event.mouseRight)
         {
@@ -161,30 +154,16 @@ int main(void)
             event.state = E_STATE_WAIT;
         }
 
-
         /* draw */
-        int i;
+        ft_draw_all(&event, form, &button_load, &button_save);
+        acquire_screen();
+        blit(page, screen, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        release_screen();
 
-        clear_to_color(screen, makecol(255, 255, 255));
-        for (i = 0; i < NB_FORM; ++i)
-        {
-            if (form[i].used)
-                line(screen, form[i].p1.x, form[i].p1.y, form[i].p2.x, form[i].p2.y, makecol(255, 0, 0));
-        }
-
-        if (event.state == E_STATE_DRAW_WAIT)
-            line(screen, tmp.x, tmp.y, mouse_x, mouse_y, makecol(255, 0, 0));
-
-        ft_draw_button(button_load, makecol(50, 50, 255), makecol(80, 80, 255), event.mousePos);
-        ft_draw_button(button_save, makecol(50, 50, 255), makecol(80, 80, 255), event.mousePos);
-
-        textout_centre_ex(screen, font, "Load", 50, 20, makecol(0, 0, 0), -1);
-        textout_centre_ex(screen, font, "Save", 150, 20, makecol(0, 0, 0), -1);
-
-
-        rest(1000/50);
+        rest(1000/FPS);
     }
 
+    destroy_bitmap(page);
     allegro_exit();
 
     return 0;

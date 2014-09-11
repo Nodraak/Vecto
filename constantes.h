@@ -1,13 +1,16 @@
 #ifndef CONSTANTES_H_INCLUDED
 #define CONSTANTES_H_INCLUDED
 
+#include <allegro.h>
 
+#define MOUSE_LEFT      (1 << 0)
+#define MOUSE_RIGHT     (1 << 1)
 
-#define MOUSE_LEFT  (1 << 0)
-#define MOUSE_RIGHT (1 << 1)
+#define SCREEN_WIDTH    800
+#define SCREEN_HEIGHT   600
 
-
-#define NB_FORM     1000
+#define FPS             50
+#define NB_FORM         1000
 
 enum e_state
 {
@@ -43,11 +46,13 @@ typedef struct      s_event
     int             mouseLeft;
     int             mouseRight;
     enum e_state    state;
+    t_vector        current_line;
     /* todo : keyboard */
 }                   t_event;
 
 
 /* croix rouge de la fenetre */
 extern int global_quit;
+extern BITMAP *page;
 
 #endif /* CONSTANTES_H_INCLUDED */
