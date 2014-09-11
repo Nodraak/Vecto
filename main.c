@@ -71,41 +71,72 @@ void ft_event_update(t_event *event)
 }
 
 
+void ft_draw_button(t_rect button, int colorDefault, int colorHover, t_vector mousePos);
+
+
+void ft_draw_button(t_rect button, int colorDefault, int colorHover, t_vector mousePos)
+{
+    if (mousePos.x > button.x && mousePos.x < button.x+button.width && mousePos.y > button.y && mousePos.y < button.y+button.height)
+        rectfill(screen, button.x, button.y, button.x+button.width, button.y+button.height, colorHover);
+    else
+        rectfill(screen, button.x, button.y, button.x+button.width, button.y+button.height, colorDefault);
+}
+
+
+int ft_is_mouse_in_rect(t_rect rect, t_vector mousePos);
+
+
+int ft_is_mouse_in_rect(t_rect rect, t_vector mousePos)
+{
+    return (mousePos.x > rect.x && mousePos.x < rect.x+rect.width && mousePos.y > rect.y && mousePos.y < rect.y+rect.height);
+}
+
+
+
 int main(void)
 {
+    t_vector tmp;
+
     t_form form[NB_FORM];
     memset(form, 0, sizeof(t_form)*NB_FORM);
-
-    t_vector tmp;
 
     t_event event;
     memset(&event, 0, sizeof(t_event));
     event.state = E_STATE_WAIT;
-    event.forceScreenRefresh = 1;
+
+    t_rect button_load = {0, 0, 100, 50};
+    t_rect button_save = {100, 0, 100, 50};
+
 
     ft_init_allegro();
 
-    ft_file_load(form, "data.vecto");
 
     while (!global_quit)
     {
-
         /* event */
         ft_event_update(&event);
 
         /* calc */
         if (event.mouseLeft)
         {
-            event.mouseLeft = 0;
-
-            if (event.state == E_STATE_WAIT)
+            if (ft_is_mouse_in_rect(button_load, event.mousePos))
             {
-
+                ft_file_load(form, "data.vecto");
+                event.mouseLeft = 0;
+            }
+            else if (ft_is_mouse_in_rect(button_save, event.mousePos))
+            {
+                ft_file_save(form, "data.vecto");
+                event.mouseLeft = 0;
+            }
+            else if (event.state == E_STATE_WAIT)
+            {
                 /* draw start */
                 tmp.x = mouse_x;
                 tmp.y = mouse_y;
 
                 event.state = E_STATE_DRAW_WAIT;
+                event.mouseLeft = 0;
             }
             else if (event.state == E_STATE_DRAW_WAIT)
             {
@@ -119,9 +150,8 @@ int main(void)
                 form[i].p2.y = mouse_y;
                 form[i].used = 1;
 
-                event.forceScreenRefresh = 1;
-
                 event.state = E_STATE_WAIT;
+                event.mouseLeft = 0;
             }
         }
 
@@ -129,43 +159,33 @@ int main(void)
         {
             event.mouseRight = 0;
             event.state = E_STATE_WAIT;
-            event.forceScreenRefresh = 1;
         }
 
 
         /* draw */
-        if (event.forceScreenRefresh || (event.state == E_STATE_DRAW_WAIT))
+        int i;
+
+        clear_to_color(screen, makecol(255, 255, 255));
+        for (i = 0; i < NB_FORM; ++i)
         {
-            int i;
-
-            event.forceScreenRefresh = 0;
-
-            acquire_screen();
-
-            clear_to_color(screen, makecol(255, 255, 255));
-            for (i = 0; i < NB_FORM; ++i)
-            {
-                if (form[i].used)
-                    line(screen, form[i].p1.x, form[i].p1.y, form[i].p2.x, form[i].p2.y, makecol(255, 0, 0));
-            }
-
-            if (event.state == E_STATE_DRAW_WAIT)
-                line(screen, tmp.x, tmp.y, mouse_x, mouse_y, makecol(255, 0, 0));
-
-            release_screen();
-
-
-/* textout_centre_ex(screen, font, "Hello world !", SCREEN_W/2, SCREEN_H/2, makecol(0, 0, 0), -1); */
-
+            if (form[i].used)
+                line(screen, form[i].p1.x, form[i].p1.y, form[i].p2.x, form[i].p2.y, makecol(255, 0, 0));
         }
+
+        if (event.state == E_STATE_DRAW_WAIT)
+            line(screen, tmp.x, tmp.y, mouse_x, mouse_y, makecol(255, 0, 0));
+
+        ft_draw_button(button_load, makecol(50, 50, 255), makecol(80, 80, 255), event.mousePos);
+        ft_draw_button(button_save, makecol(50, 50, 255), makecol(80, 80, 255), event.mousePos);
+
+        textout_centre_ex(screen, font, "Load", 50, 20, makecol(0, 0, 0), -1);
+        textout_centre_ex(screen, font, "Save", 150, 20, makecol(0, 0, 0), -1);
+
 
         rest(1000/50);
     }
 
     allegro_exit();
-
-    ft_file_save(form, "data.vecto");
-
 
     return 0;
 }

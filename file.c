@@ -19,7 +19,6 @@ void ft_file_load(t_form form[NB_FORM], char *path)
     {
         fprintf(stderr, "Error opening file %s.\n", path);
         exit(EXIT_FAILURE);
-
     }
 
     while (fgets(tmp, 1024-1, f) != NULL)
@@ -42,13 +41,11 @@ void ft_file_save(t_form form[NB_FORM], char *path)
     FILE *f = NULL;
     int i = 0;
 
-
     f = fopen(path, "w");
     if (f == NULL)
     {
         fprintf(stderr, "Error opening file %s.\n", path);
         exit(EXIT_FAILURE);
-
     }
 
     for (i = 0; i < NB_FORM; ++i)

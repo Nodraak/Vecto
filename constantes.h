@@ -22,6 +22,14 @@ typedef struct      s_vector
     int             y;
 }                   t_vector;
 
+typedef struct      s_rect
+{
+    int             x;
+    int             y;
+    int             width;
+    int             height;
+}                   t_rect;
+
 typedef struct      s_form
 {
     int             used;
@@ -35,7 +43,6 @@ typedef struct      s_event
     int             mouseLeft;
     int             mouseRight;
     enum e_state    state;
-    int             forceScreenRefresh;
     /* todo : keyboard */
 }                   t_event;
 
