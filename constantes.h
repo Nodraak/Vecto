@@ -3,19 +3,35 @@
 
 #include <allegro.h>
 
-#define MOUSE_LEFT      (1 << 0)
-#define MOUSE_RIGHT     (1 << 1)
+#define MOUSE_LEFT          (1 << 0)
+#define MOUSE_RIGHT         (1 << 1)
 
-#define SCREEN_WIDTH    800
-#define SCREEN_HEIGHT   600
+#define SCREEN_WIDTH        800
+#define SCREEN_HEIGHT       600
 
-#define FPS             50
-#define NB_FORM         1000
+#define FPS                 50
+#define NB_FORM             100
+#define NB_POINT            100
 
 enum e_state
 {
     E_STATE_WAIT,
     E_STATE_DRAW_WAIT
+};
+
+enum e_label
+{
+    E_LABEL_LOAD,
+    E_LABEL_SAVE,
+    E_LABEL_LINE,
+    E_LABEL_POLYGON,
+    E_LABEL_LAST
+};
+
+enum e_form
+{
+    E_FORM_LINE = 0,
+    E_FORM_POLYGON = 1
 };
 
 
@@ -36,8 +52,9 @@ typedef struct      s_rect
 typedef struct      s_form
 {
     int             used;
-    t_vector        p1;
-    t_vector        p2;
+    enum e_form     type;
+    int             nb_point;
+    t_vector        point[NB_POINT];
 }                   t_form;
 
 typedef struct      s_event
@@ -45,8 +62,10 @@ typedef struct      s_event
     t_vector        mousePos;
     int             mouseLeft;
     int             mouseRight;
+
     enum e_state    state;
-    t_vector        current_line;
+    t_form          current;
+    enum e_form     selected;
     /* todo : keyboard */
 }                   t_event;
 

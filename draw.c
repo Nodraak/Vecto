@@ -7,7 +7,7 @@
 
 void ft_draw_button(t_rect *button, int colorDefault, int colorHover, t_vector mousePos)
 {
-    if (mousePos.x > button->x && mousePos.x < button->x+button->width && mousePos.y > button->y && mousePos.y < button->y+button->height)
+    if (ft_is_mouse_in_rect(button, mousePos))
         rectfill(page, button->x, button->y, button->x+button->width, button->y+button->height, colorHover);
     else
         rectfill(page, button->x, button->y, button->x+button->width, button->y+button->height, colorDefault);
@@ -20,23 +20,32 @@ int ft_is_mouse_in_rect(t_rect *rect, t_vector mousePos)
 }
 
 
-void ft_draw_all(t_event *event, t_form *form, t_rect *button_load, t_rect *button_save)
+void ft_draw_all(t_event *event, t_form *form, t_rect *label)
 {
     int i;
 
     clear_to_color(page, makecol(255, 255, 255));
     for (i = 0; i < NB_FORM; ++i)
     {
-        if (form[i].used)
-            line(page, form[i].p1.x, form[i].p1.y, form[i].p2.x, form[i].p2.y, makecol(255, 0, 0));
+        if (form[i].used && form[i].type == E_FORM_LINE)
+            line(page, form[i].point[0].x, form[i].point[0].y, form[i].point[1].x, form[i].point[1].y, makecol(255, 0, 0));
     }
 
     if (event->state == E_STATE_DRAW_WAIT)
-        line(page, event->current_line.x, event->current_line.y, mouse_x, mouse_y, makecol(255, 0, 0));
+        line(page, event->current.point[0].x, event->current.point[0].y, mouse_x, mouse_y, makecol(255, 0, 0));
 
-    ft_draw_button(button_load, makecol(50, 50, 255), makecol(80, 80, 255), event->mousePos);
-    ft_draw_button(button_save, makecol(50, 50, 255), makecol(80, 80, 255), event->mousePos);
+    for (i = 0; i < E_LABEL_LAST; ++i)
+        ft_draw_button(&label[i], makecol(50, 50, 255), makecol(80, 80, 255), event->mousePos);
 
-    textout_centre_ex(page, font, "Load", 50, 20, makecol(0, 0, 0), -1);
-    textout_centre_ex(page, font, "Save", 150, 20, makecol(0, 0, 0), -1);
+    textout_centre_ex(page, font, "Charger", 50, 20, makecol(0, 0, 0), -1);
+    textout_centre_ex(page, font, "Sauver", 150, 20, makecol(0, 0, 0), -1);
+
+    textout_centre_ex(page, font, "Ligne", 650, 20, makecol(0, 0, 0), -1);
+    textout_centre_ex(page, font, "Polygone", 750, 20, makecol(0, 0, 0), -1);
+
+    if (event->selected == E_FORM_LINE)
+        rect(page, 600, 0, 700, 50, makecol(255, 100, 100));
+    if (event->selected == E_FORM_POLYGON)
+        rect(page, 700, 0, 800, 50, makecol(255, 100, 100));
 }
+

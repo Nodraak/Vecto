@@ -1,4 +1,24 @@
 
+/*
+
+TODO
+
+Base : (16/20)
+- pouvoir construire un dessin comparable à l'exemple ci dessus (polygones colorés pleins)
+- objets groupés hiérarchiquement en "objets" (carreaux -> fenêtres -> façade -> maison...)
+- possibilité de grouper/dégrouper, entrer/sortir des groupes
+- possibilité de sélectionner et copier/couper/coller/supprimer et translater la sélection
+- pouvoir gérer et modifier l'ordre d'affichage des groupes : passer un objet devant/derrière un autre
+- sauvegarde/chargement dans un fichier, format libre mais vectoriel, pas au niveau pixel :
+  un dessin peut être sauvé, l'application terminée et relancée,
+   le dessin peut être rechargé et reste éditable comme si on était resté dans l'appli
+- respecter les critères de programmation modulaire, présenter une conception claire et bien découpée
+
+Bonus :
+Exemples : zoom et scroll, mode édition des sommets, rotations, undo/redo, barre d'outils, lisser polygones, textes etc...
+
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +65,6 @@ void ft_init_allegro(void)
         fprintf(stderr, "Error create tmp screen.\n");
         exit(EXIT_FAILURE);
     }
-
 }
 
 
@@ -82,25 +101,35 @@ void ft_event_update(t_event *event)
 }
 
 
-void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *button_load, t_rect *button_save);
+void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *label);
 
-void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *button_load, t_rect *button_save)
+void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *label)
 {
-    if (ft_is_mouse_in_rect(button_load, event->mousePos))
+    if (ft_is_mouse_in_rect(&label[E_LABEL_LOAD], event->mousePos))
     {
         ft_file_load(form, "data.vecto");
         event->mouseLeft = 0;
     }
-    else if (ft_is_mouse_in_rect(button_save, event->mousePos))
+    else if (ft_is_mouse_in_rect(&label[E_LABEL_SAVE], event->mousePos))
     {
         ft_file_save(form, "data.vecto");
+        event->mouseLeft = 0;
+    }
+    else if (ft_is_mouse_in_rect(&label[E_LABEL_LINE], event->mousePos))
+    {
+        event->selected = E_FORM_LINE;
+        event->mouseLeft = 0;
+    }
+    else if (ft_is_mouse_in_rect(&label[E_LABEL_POLYGON], event->mousePos))
+    {
+        event->selected = E_FORM_POLYGON;
         event->mouseLeft = 0;
     }
     else if (event->state == E_STATE_WAIT)
     {
         /* draw start */
-        event->current_line.x = mouse_x;
-        event->current_line.y = mouse_y;
+        event->current.point[0].x = mouse_x;
+        event->current.point[0].y = mouse_y;
 
         event->state = E_STATE_DRAW_WAIT;
         event->mouseLeft = 0;
@@ -111,10 +140,10 @@ void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *button_load, t_r
         int i = 0;
         while (form[i].used)
             i++;
-        form[i].p1.x = event->current_line.x;
-        form[i].p1.y = event->current_line.y;
-        form[i].p2.x = mouse_x;
-        form[i].p2.y = mouse_y;
+        form[i].point[0].x = event->current.point[0].x;
+        form[i].point[0].y = event->current.point[0].y;
+        form[i].point[1].x = mouse_x;
+        form[i].point[1].y = mouse_y;
         form[i].used = 1;
 
         event->state = E_STATE_WAIT;
@@ -131,9 +160,14 @@ int main(void)
     t_event event;
     memset(&event, 0, sizeof(t_event));
     event.state = E_STATE_WAIT;
+    event.selected = E_FORM_LINE;
 
-    t_rect button_load = {0, 0, 100, 50};
-    t_rect button_save = {100, 0, 100, 50};
+    t_rect label[E_LABEL_LAST] = {
+        {0, 0, 100, 50},
+        {100, 0, 100, 50},
+        {600, 0, 100, 50},
+        {700, 0, 100, 50}
+    };
 
 
     ft_init_allegro();
@@ -146,7 +180,7 @@ int main(void)
 
         /* calc */
         if (event.mouseLeft)
-            ft_calc_on_mouseLeft(&event, form, &button_load, &button_save);
+            ft_calc_on_mouseLeft(&event, form, label);
 
         if (event.mouseRight)
         {
@@ -155,7 +189,7 @@ int main(void)
         }
 
         /* draw */
-        ft_draw_all(&event, form, &button_load, &button_save);
+        ft_draw_all(&event, form, label);
         acquire_screen();
         blit(page, screen, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         release_screen();
