@@ -6,83 +6,84 @@
 #define MOUSE_LEFT          (1 << 0)
 #define MOUSE_RIGHT         (1 << 1)
 
+#define FPS                 50
 #define SCREEN_WIDTH        800
 #define SCREEN_HEIGHT       600
 
-#define FPS                 50
 #define NB_FORM             100
 #define NB_POINT            100
 
-enum e_state
+typedef enum    _e_state
 {
-    E_STATE_IDLE,
-    E_STATE_DRAWING
-};
+    STATE_IDLE,
+    STATE_DRAWING
+}               e_state;
 
-enum e_label
+typedef enum    _e_button
 {
-    E_LABEL_LOAD,
-    E_LABEL_SAVE,
-    E_LABEL_LINE,
-    E_LABEL_POLYGON,
-    E_LABEL_LAST
-};
+    BUTTON_LOAD,
+    BUTTON_SAVE,
+    BUTTON_LINE,
+    BUTTON_POLYGON,
+    BUTTON_LAST
+}               e_button;
 
-enum e_form
+typedef enum    _e_form
 {
-    E_FORM_LINE = 0,
-    E_FORM_POLYGON = 1,
-    E_FORM_NONE = 42
-};
+    FORM_NONE = 0,
+    FORM_LINE = 1,
+    FORM_POLYGON = 2
+}               e_form;
 
 /* basic */
 
-typedef struct      s_vector
+typedef struct      _s_vector
 {
     int             x;
     int             y;
-}                   t_vector;
+}                   s_vector;
 
-typedef struct      s_rect
+typedef struct      _s_rect
 {
     int             x;
     int             y;
     int             width;
     int             height;
-}                   t_rect;
+}                   s_rect;
 
 /* extended */
 
-typedef struct      s_label
+typedef struct      _s_button
 {
-    t_rect          pos;
+    s_rect          pos;
     char            text[1024];
     int             colorBackgroundDefault;
     int             colorBackgroundHover;
-}                   t_label;
+    e_form          form;
+}                   s_button;
 
 
-typedef struct      s_form
+typedef struct      _s_form
 {
-    enum e_form     type;
+    e_form          type;
     int             nb_point;
-    t_vector        point[NB_POINT];
-}                   t_form;
+    s_vector        point[NB_POINT];
+}                   s_form;
 
-typedef struct      s_event
+typedef struct      _s_event
 {
-    t_vector        mousePos;
+    s_vector        mousePos;
     int             mouseLeft;
     int             mouseRight;
     /* todo : keyboard */
 
-    enum e_state    state;
-    enum e_form     form;
-    t_form          current;
-}                   t_event;
+    e_state         state;
+    e_form          form;
+    s_form          current;
+}                   s_event;
 
 
-extern int global_quit;
-extern BITMAP *page;
+extern int g_quit;
+extern BITMAP *g_page;
 
 #endif /* CONSTANTES_H_INCLUDED */

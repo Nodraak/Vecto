@@ -32,6 +32,7 @@
 				</Compiler>
 				<Linker>
 					<Add library="liballeg" />
+					<Add directory="C:/Program Files (x86)/CodeBlocks/MinGW/lib/allegro" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -52,6 +53,10 @@
 			<Add option="-Wall" />
 			<Add option="-g" />
 		</Compiler>
+		<Unit filename="calc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="calc.h" />
 		<Unit filename="constantes.h" />
 		<Unit filename="draw.c">
 			<Option compilerVar="CC" />
@@ -61,6 +66,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="file.h" />
+		<Unit filename="init.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="init.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
