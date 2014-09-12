@@ -5,12 +5,14 @@
 #include "draw.h"
 
 
-void ft_draw_button(t_rect *button, int colorDefault, int colorHover, t_vector mousePos)
+void ft_draw_button(t_label *button, t_vector mousePos)
 {
-    if (ft_is_mouse_in_rect(button, mousePos))
-        rectfill(page, button->x, button->y, button->x+button->width, button->y+button->height, colorHover);
+    if (ft_is_mouse_in_rect(&button->pos, mousePos))
+        rectfill(page, button->pos.x, button->pos.y, button->pos.x+button->pos.width, button->pos.y+button->pos.height, button->colorBackgroundHover);
     else
-        rectfill(page, button->x, button->y, button->x+button->width, button->y+button->height, colorDefault);
+        rectfill(page, button->pos.x, button->pos.y, button->pos.x+button->pos.width, button->pos.y+button->pos.height, button->colorBackgroundDefault);
+
+    textout_centre_ex(page, font, button->text, button->pos.x + button->pos.width/2, button->pos.y + button->pos.height/2-5, makecol(0, 0, 0), -1);
 }
 
 
@@ -20,32 +22,39 @@ int ft_is_mouse_in_rect(t_rect *rect, t_vector mousePos)
 }
 
 
-void ft_draw_all(t_event *event, t_form *form, t_rect *label)
+void ft_draw_all(t_event *event, t_form *form, t_label *label)
 {
-    int i;
+    int i, j;
 
+    /* clear */
     clear_to_color(page, makecol(255, 255, 255));
+
+    /* saved forms */
     for (i = 0; i < NB_FORM; ++i)
     {
-        if (form[i].used && form[i].type == E_FORM_LINE)
-            line(page, form[i].point[0].x, form[i].point[0].y, form[i].point[1].x, form[i].point[1].y, makecol(255, 0, 0));
+        if (form[i].type != E_FORM_NONE)
+        {
+            for (j = 0; j < form[i].nb_point-1; ++j)
+                line(page, form[i].point[j].x, form[i].point[j].y, form[i].point[j+1].x, form[i].point[j+1].y, makecol(255, 0, 0));
+        }
     }
 
-    if (event->state == E_STATE_DRAW_WAIT)
-        line(page, event->current.point[0].x, event->current.point[0].y, mouse_x, mouse_y, makecol(255, 0, 0));
+    /* current form */
+    if (event->state == E_STATE_DRAWING)
+    {
+        for (j = 0; j < event->current.nb_point-1; ++j)
+            line(page, event->current.point[j].x, event->current.point[j].y, event->current.point[j+1].x, event->current.point[j+1].y, makecol(255, 0, 0));
+        line(page, event->current.point[j].x, event->current.point[j].y, mouse_x, mouse_y, makecol(255, 0, 0));
+    }
 
+    /* buttons : menu / forms */
     for (i = 0; i < E_LABEL_LAST; ++i)
-        ft_draw_button(&label[i], makecol(50, 50, 255), makecol(80, 80, 255), event->mousePos);
+        ft_draw_button(&label[i], event->mousePos);
 
-    textout_centre_ex(page, font, "Charger", 50, 20, makecol(0, 0, 0), -1);
-    textout_centre_ex(page, font, "Sauver", 150, 20, makecol(0, 0, 0), -1);
-
-    textout_centre_ex(page, font, "Ligne", 650, 20, makecol(0, 0, 0), -1);
-    textout_centre_ex(page, font, "Polygone", 750, 20, makecol(0, 0, 0), -1);
-
-    if (event->selected == E_FORM_LINE)
+    /* selected buttons */
+    if (event->form == E_FORM_LINE)
         rect(page, 600, 0, 700, 50, makecol(255, 100, 100));
-    if (event->selected == E_FORM_POLYGON)
+    if (event->form == E_FORM_POLYGON)
         rect(page, 700, 0, 800, 50, makecol(255, 100, 100));
 }
 

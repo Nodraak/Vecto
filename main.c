@@ -17,6 +17,8 @@ Base : (16/20)
 Bonus :
 Exemples : zoom et scroll, mode édition des sommets, rotations, undo/redo, barre d'outils, lisser polygones, textes etc...
 
+Doc -> http://alleg.sourceforge.net/stabledocs/en/allegro.html
+
 */
 
 
@@ -101,82 +103,121 @@ void ft_event_update(t_event *event)
 }
 
 
-void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *label);
+void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_label *label);
 
-void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_rect *label)
+void ft_calc_on_mouseLeft(t_event *event, t_form *form, t_label *label)
 {
-    if (ft_is_mouse_in_rect(&label[E_LABEL_LOAD], event->mousePos))
-    {
+    event->mouseLeft = 0;
+
+    /* menu */
+    if (ft_is_mouse_in_rect(&label[E_LABEL_LOAD].pos, event->mousePos))
         ft_file_load(form, "data.vecto");
-        event->mouseLeft = 0;
-    }
-    else if (ft_is_mouse_in_rect(&label[E_LABEL_SAVE], event->mousePos))
-    {
+    else if (ft_is_mouse_in_rect(&label[E_LABEL_SAVE].pos, event->mousePos))
         ft_file_save(form, "data.vecto");
-        event->mouseLeft = 0;
-    }
-    else if (ft_is_mouse_in_rect(&label[E_LABEL_LINE], event->mousePos))
-    {
-        event->selected = E_FORM_LINE;
-        event->mouseLeft = 0;
-    }
-    else if (ft_is_mouse_in_rect(&label[E_LABEL_POLYGON], event->mousePos))
-    {
-        event->selected = E_FORM_POLYGON;
-        event->mouseLeft = 0;
-    }
-    else if (event->state == E_STATE_WAIT)
+    /* form */
+    else if (ft_is_mouse_in_rect(&label[E_LABEL_LINE].pos, event->mousePos))
+        event->form = E_FORM_LINE;
+    else if (ft_is_mouse_in_rect(&label[E_LABEL_POLYGON].pos, event->mousePos))
+        event->form = E_FORM_POLYGON;
+    /* draw start / continue / end */
+    else if (event->state == E_STATE_IDLE)
     {
         /* draw start */
+        event->current.nb_point = 1;
         event->current.point[0].x = mouse_x;
         event->current.point[0].y = mouse_y;
 
-        event->state = E_STATE_DRAW_WAIT;
-        event->mouseLeft = 0;
+        event->state = E_STATE_DRAWING;
     }
-    else if (event->state == E_STATE_DRAW_WAIT)
+    else if (event->state == E_STATE_DRAWING)
     {
-        /* draw end */
-        int i = 0;
-        while (form[i].used)
-            i++;
-        form[i].point[0].x = event->current.point[0].x;
-        form[i].point[0].y = event->current.point[0].y;
-        form[i].point[1].x = mouse_x;
-        form[i].point[1].y = mouse_y;
-        form[i].used = 1;
+        /* draw continue / end */
+        if (event->form == E_FORM_LINE)
+        {
+            int i = 0;
+            while (form[i].type != E_FORM_NONE)
+                i++;
 
-        event->state = E_STATE_WAIT;
-        event->mouseLeft = 0;
+            form[i].point[0].x = event->current.point[0].x;
+            form[i].point[0].y = event->current.point[0].y;
+            form[i].point[1].x = mouse_x;
+            form[i].point[1].y = mouse_y;
+            form[i].nb_point = 2;
+            form[i].type = E_FORM_LINE;
+
+            event->state = E_STATE_IDLE;
+        }
+        else if (event->form == E_FORM_POLYGON)
+        {
+            event->current.point[event->current.nb_point].x = mouse_x;
+            event->current.point[event->current.nb_point].y = mouse_y;
+            event->current.nb_point ++;
+        }
+        else
+            printf("Error %d %s\n", __LINE__, __FILE__);
+
     }
 }
 
 
 int main(void)
 {
+    int i;
     t_form form[NB_FORM];
-    memset(form, 0, sizeof(t_form)*NB_FORM);
-
     t_event event;
-    memset(&event, 0, sizeof(t_event));
-    event.state = E_STATE_WAIT;
-    event.selected = E_FORM_LINE;
 
-    t_rect label[E_LABEL_LAST] = {
-        {0, 0, 100, 50},
-        {100, 0, 100, 50},
-        {600, 0, 100, 50},
-        {700, 0, 100, 50}
-    };
+    for (i = 0; i < NB_FORM; ++i)
+        form[i].type = E_FORM_NONE;
 
+    event.state = E_STATE_IDLE;
+    event.form = E_FORM_LINE;
+
+    t_label label[E_LABEL_LAST];
 
     ft_init_allegro();
+
+label[E_LABEL_LOAD].pos.x = 0;
+label[E_LABEL_LOAD].pos.y = 0;
+label[E_LABEL_LOAD].pos.width = 100;
+label[E_LABEL_LOAD].pos.height = 50;
+label[E_LABEL_LOAD].colorBackgroundDefault = makecol(50, 50, 255);
+label[E_LABEL_LOAD].colorBackgroundHover = makecol(80, 80, 255);
+sprintf(label[E_LABEL_LOAD].text, "Charger");
+
+label[E_LABEL_SAVE].pos.x = 100;
+label[E_LABEL_SAVE].pos.y = 0;
+label[E_LABEL_SAVE].pos.width = 100;
+label[E_LABEL_SAVE].pos.height = 50;
+label[E_LABEL_SAVE].colorBackgroundDefault = makecol(50, 50, 255);
+label[E_LABEL_SAVE].colorBackgroundHover = makecol(80, 80, 255);
+sprintf(label[E_LABEL_SAVE].text, "Sauver");
+
+label[E_LABEL_LINE].pos.x = 600;
+label[E_LABEL_LINE].pos.y = 0;
+label[E_LABEL_LINE].pos.width = 100;
+label[E_LABEL_LINE].pos.height = 50;
+label[E_LABEL_LINE].colorBackgroundDefault = makecol(50, 50, 255);
+label[E_LABEL_LINE].colorBackgroundHover = makecol(80, 80, 255);
+sprintf(label[E_LABEL_LINE].text, "Ligne");
+
+label[E_LABEL_POLYGON].pos.x = 700;
+label[E_LABEL_POLYGON].pos.y = 0;
+label[E_LABEL_POLYGON].pos.width = 100;
+label[E_LABEL_POLYGON].pos.height = 50;
+label[E_LABEL_POLYGON].colorBackgroundDefault = makecol(50, 50, 255);
+label[E_LABEL_POLYGON].colorBackgroundHover = makecol(80, 80, 255);
+sprintf(label[E_LABEL_POLYGON].text, "Polygone");
+
+
 
 
     while (!global_quit)
     {
         /* event */
         ft_event_update(&event);
+
+        if (key[KEY_ESC])
+            global_quit = 1;
 
         /* calc */
         if (event.mouseLeft)
@@ -185,7 +226,32 @@ int main(void)
         if (event.mouseRight)
         {
             event.mouseRight = 0;
-            event.state = E_STATE_WAIT;
+
+            if (event.form == E_FORM_LINE)
+            {
+
+            }
+            else if (event.form == E_FORM_POLYGON)
+            {
+                int i = 0, j;
+                while (form[i].type != E_FORM_NONE)
+                    i++;
+
+                for (j = 0; j < event.current.nb_point; ++j)
+                {
+                    form[i].point[j].x = event.current.point[j].x;
+                    form[i].point[j].y = event.current.point[j].y;
+                }
+
+                form[i].point[event.current.nb_point].x = mouse_x;
+                form[i].point[event.current.nb_point].y = mouse_y;
+                form[i].nb_point = event.current.nb_point+1;
+
+                form[i].type = E_FORM_POLYGON;
+
+                event.state = E_STATE_IDLE;
+            }
+
         }
 
         /* draw */

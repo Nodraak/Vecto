@@ -15,8 +15,8 @@
 
 enum e_state
 {
-    E_STATE_WAIT,
-    E_STATE_DRAW_WAIT
+    E_STATE_IDLE,
+    E_STATE_DRAWING
 };
 
 enum e_label
@@ -31,9 +31,11 @@ enum e_label
 enum e_form
 {
     E_FORM_LINE = 0,
-    E_FORM_POLYGON = 1
+    E_FORM_POLYGON = 1,
+    E_FORM_NONE = 42
 };
 
+/* basic */
 
 typedef struct      s_vector
 {
@@ -49,9 +51,19 @@ typedef struct      s_rect
     int             height;
 }                   t_rect;
 
+/* extended */
+
+typedef struct      s_label
+{
+    t_rect          pos;
+    char            text[1024];
+    int             colorBackgroundDefault;
+    int             colorBackgroundHover;
+}                   t_label;
+
+
 typedef struct      s_form
 {
-    int             used;
     enum e_form     type;
     int             nb_point;
     t_vector        point[NB_POINT];
@@ -62,15 +74,14 @@ typedef struct      s_event
     t_vector        mousePos;
     int             mouseLeft;
     int             mouseRight;
+    /* todo : keyboard */
 
     enum e_state    state;
+    enum e_form     form;
     t_form          current;
-    enum e_form     selected;
-    /* todo : keyboard */
 }                   t_event;
 
 
-/* croix rouge de la fenetre */
 extern int global_quit;
 extern BITMAP *page;
 
