@@ -12,6 +12,7 @@
 
 #define NB_FORM             100
 #define NB_POINT            100
+#define COLOR_STEP          15
 
 typedef enum    _e_state
 {
@@ -23,8 +24,17 @@ typedef enum    _e_button
 {
     BUTTON_LOAD,
     BUTTON_SAVE,
+
     BUTTON_LINE,
     BUTTON_POLYGON,
+
+    BUTTON_R_MINUS,
+    BUTTON_R_PLUS,
+    BUTTON_G_MINUS,
+    BUTTON_G_PLUS,
+    BUTTON_B_MINUS,
+    BUTTON_B_PLUS,
+
     BUTTON_LAST
 }               e_button;
 
@@ -51,6 +61,13 @@ typedef struct      _s_rect
     int             height;
 }                   s_rect;
 
+typedef struct      _s_color
+{
+    int             r;
+    int             g;
+    int             b;
+}                   s_color;
+
 /* extended */
 
 typedef struct      _s_button
@@ -68,6 +85,7 @@ typedef struct      _s_form
     e_form          type;
     int             nb_point;
     s_vector        point[NB_POINT];
+    s_color         color;
 }                   s_form;
 
 typedef struct      _s_event
@@ -80,10 +98,12 @@ typedef struct      _s_event
     e_state         state;
     e_form          form;
     s_form          current;
+    s_color         color;
 }                   s_event;
 
 
 extern int g_quit;
 extern BITMAP *g_page;
+extern BITMAP *g_page_tmp;
 
 #endif /* CONSTANTES_H_INCLUDED */

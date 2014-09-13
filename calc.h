@@ -4,4 +4,7 @@
 void ft_calc_on_mouseLeft(s_event *event, s_form *forms, s_button *buttons);
 void ft_calc_on_mouseRight(s_event *event, s_form *forms);
 
+int ft_is_button_for_color(e_button button);
+void ft_calc_update_button_color(s_button *buttons, s_color *color);
+
 #endif /* CALC_H_INCLUDED */

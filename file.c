@@ -5,7 +5,7 @@
 
 #include "constantes.h"
 #include "file.h"
-
+#include "init.h"
 
 
 int ft_file_goto_next_nb(char *str, int index)
@@ -13,6 +13,10 @@ int ft_file_goto_next_nb(char *str, int index)
     /* goto space */
     while (str[index] != '\0' && str[index] != ' ')
         index ++;
+
+    if (str[index] == '\0')
+        return index;
+
     /* skip space */
     index ++;
 
@@ -34,19 +38,34 @@ void ft_file_load(s_form forms[NB_FORM], char *path)
         exit(EXIT_FAILURE);
     }
 
+    /* clear old forms */
+    ft_init_form_reset(forms);
+
     /* for each line = for each form */
     while (fgets(tmp, 1024-1, f) != NULL)
     {
         i_tmp = 0;
 
-        /* get tipy of form */
-        ret = sscanf(tmp, "%d", (int*)&forms[i_form].type);
+        /* get tip of form */
+        ret = sscanf(&tmp[i_tmp], "%d", (int*)&forms[i_form].type);
         if (ret != 1)
         {
             printf("Error %d %s\n", __LINE__, __FILE__);
             break;
         }
 
+        i_tmp = ft_file_goto_next_nb(tmp, i_tmp);
+
+        /* color */
+        ret = sscanf(&tmp[i_tmp], "%d %d %d", &forms[i_form].color.r, &forms[i_form].color.g, &forms[i_form].color.b);
+        if (ret != 3)
+        {
+            printf("Error %d %s\n", __LINE__, __FILE__);
+            break;
+        }
+
+        i_tmp = ft_file_goto_next_nb(tmp, i_tmp);
+        i_tmp = ft_file_goto_next_nb(tmp, i_tmp);
         i_tmp = ft_file_goto_next_nb(tmp, i_tmp);
 
         /* for each data of form */
@@ -57,10 +76,13 @@ void ft_file_load(s_form forms[NB_FORM], char *path)
             if (ret != 2) /* end of line (or unexpeted error, but osef) */
                 break;
 
+            i_point ++;
+
             i_tmp = ft_file_goto_next_nb(tmp, i_tmp);
             i_tmp = ft_file_goto_next_nb(tmp, i_tmp);
 
-            i_point ++;
+            if (tmp[i_tmp] == '\0')
+                break;
         }
 
         /* save form type */
@@ -75,10 +97,6 @@ void ft_file_load(s_form forms[NB_FORM], char *path)
 
         i_form ++;
     }
-
-    /* set other free slot to unused */
-    for (; i_form < NB_FORM; ++i_form)
-        forms[i_form].type = FORM_NONE;
 
     fclose(f);
 }
@@ -100,10 +118,11 @@ void ft_file_save(s_form forms[NB_FORM], char *path)
     {
         if (forms[i].type != FORM_NONE)
         {
-            fprintf(f, "%d ", forms[i].type);
+            fprintf(f, "%d", forms[i].type);
+            fprintf(f, " %d %d %d", forms[i].color.r, forms[i].color.g, forms[i].color.b);
 
             for (j = 0; j < forms[i].nb_point; ++j)
-                fprintf(f, "%d %d ", forms[i].point[j].x, forms[i].point[j].y);
+                fprintf(f, " %d %d", forms[i].point[j].x, forms[i].point[j].y);
 
             fprintf(f, "\n");
         }

@@ -36,45 +36,58 @@ void ft_init_allegro(void)
         fprintf(stderr, "Error create tmp screen.\n");
         exit(EXIT_FAILURE);
     }
+    g_page_tmp = create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
+    if (g_page_tmp == NULL)
+    {
+        fprintf(stderr, "Error create tmp screen.\n");
+        exit(EXIT_FAILURE);
+    }
 }
 
 
 void ft_init_buttons(s_button *buttons)
 {
-    buttons[BUTTON_LOAD].pos.x = 0;
-    buttons[BUTTON_LOAD].pos.y = 0;
-    buttons[BUTTON_LOAD].pos.width = 100;
-    buttons[BUTTON_LOAD].pos.height = 50;
-    buttons[BUTTON_LOAD].colorBackgroundDefault = makecol(50, 50, 255);
-    buttons[BUTTON_LOAD].colorBackgroundHover = makecol(80, 80, 255);
-    buttons[BUTTON_LOAD].form = FORM_NONE;
-    sprintf(buttons[BUTTON_LOAD].text, "Charger");
+    int i, ret;
+    FILE *f = NULL;
+    s_button tmp;
 
-    buttons[BUTTON_SAVE].pos.x = 100;
-    buttons[BUTTON_SAVE].pos.y = 0;
-    buttons[BUTTON_SAVE].pos.width = 100;
-    buttons[BUTTON_SAVE].pos.height = 50;
-    buttons[BUTTON_SAVE].colorBackgroundDefault = makecol(50, 50, 255);
-    buttons[BUTTON_SAVE].colorBackgroundHover = makecol(80, 80, 255);
-    buttons[BUTTON_SAVE].form = FORM_NONE;
-    sprintf(buttons[BUTTON_SAVE].text, "Sauver");
+    f = fopen("buttons.data", "r");
+    if (f == NULL)
+    {
+        fprintf(stderr, "Error opening file.\n");
+        exit(EXIT_FAILURE);
+    }
 
-    buttons[BUTTON_LINE].pos.x = 600;
-    buttons[BUTTON_LINE].pos.y = 0;
-    buttons[BUTTON_LINE].pos.width = 100;
-    buttons[BUTTON_LINE].pos.height = 50;
-    buttons[BUTTON_LINE].colorBackgroundDefault = makecol(50, 50, 255);
-    buttons[BUTTON_LINE].colorBackgroundHover = makecol(80, 80, 255);
-    buttons[BUTTON_LINE].form = FORM_LINE;
-    sprintf(buttons[BUTTON_LINE].text, "Ligne");
+    for (i = 0; i < BUTTON_LAST; ++i)
+    {
+        int cbdr, cbdg, cbdb;
+        int cbhr, cbhg, cbhb;
 
-    buttons[BUTTON_POLYGON].pos.x = 700;
-    buttons[BUTTON_POLYGON].pos.y = 0;
-    buttons[BUTTON_POLYGON].pos.width = 100;
-    buttons[BUTTON_POLYGON].pos.height = 50;
-    buttons[BUTTON_POLYGON].colorBackgroundDefault = makecol(50, 50, 255);
-    buttons[BUTTON_POLYGON].colorBackgroundHover = makecol(80, 80, 255);
-    buttons[BUTTON_POLYGON].form = FORM_POLYGON;
-    sprintf(buttons[BUTTON_POLYGON].text, "Polygone");
+        ret = fscanf(f, "%d %d %d %d | %d %d %d %d %d %d | %d %s",
+                     &tmp.pos.x, &tmp.pos.y, &tmp.pos.width, &tmp.pos.height,
+                     &cbdr, &cbdg, &cbdb, &cbhr, &cbhg, &cbhb,
+                     (int *)&tmp.form, tmp.text);
+
+        if (ret != 12)
+        {
+            fprintf(stderr, "Error loading buttons.\n");
+            exit(EXIT_FAILURE);
+        }
+
+        tmp.colorBackgroundDefault = makecol(cbdr, cbdg, cbdb);
+        tmp.colorBackgroundHover = makecol(cbhr, cbhg, cbhb);
+        tmp.text[strlen(tmp.text)] = '\0';
+
+        memcpy(&buttons[i], &tmp, sizeof(s_button));
+    }
+}
+
+
+void ft_init_form_reset(s_form *forms)
+{
+    int i;
+
+    for (i = 0; i < NB_FORM; ++i)
+        forms[i].type = FORM_NONE;
 }
 

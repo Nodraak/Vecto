@@ -34,8 +34,9 @@ Doc -> http://alleg.sourceforge.net/stabledocs/en/allegro.html
 #include "init.h"
 
 
-BITMAP *g_page = NULL;
 int g_quit = 0;
+BITMAP *g_page = NULL;
+BITMAP *g_page_tmp = NULL;
 
 
 void ft_event_update(s_event *event);
@@ -77,19 +78,19 @@ void ft_event_update(s_event *event)
 
 int main(void)
 {
-    int i;
     s_form forms[NB_FORM];
     s_event event;
     s_button buttons[BUTTON_LAST];
 
     ft_init_allegro();
     ft_init_buttons(buttons);
-
-    for (i = 0; i < NB_FORM; ++i)
-        forms[i].type = FORM_NONE;
+    ft_init_form_reset(forms);
 
     event.state = STATE_IDLE;
     event.form = FORM_LINE;
+    event.color.r = 120;
+    event.color.g = 120;
+    event.color.b = 120;
 
     while (!g_quit)
     {
@@ -109,6 +110,8 @@ int main(void)
             ft_calc_on_mouseRight(&event, forms);
         }
 
+        ft_calc_update_button_color(buttons, &event.color);
+
         /* draw */
         ft_draw_all(&event, forms, buttons);
         acquire_screen();
@@ -119,6 +122,7 @@ int main(void)
     }
 
     destroy_bitmap(g_page);
+    destroy_bitmap(g_page_tmp);
     allegro_exit();
 
     return 0;

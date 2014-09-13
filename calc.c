@@ -19,6 +19,19 @@ void ft_calc_on_mouseLeft(s_event *event, s_form *forms, s_button *buttons)
         event->form = FORM_LINE;
     else if (ft_is_mouse_in_rect(&buttons[BUTTON_POLYGON].pos, event->mousePos))
         event->form = FORM_POLYGON;
+    /* colors */
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_R_MINUS].pos, event->mousePos))
+        event->color.r -= COLOR_STEP;
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_R_PLUS].pos, event->mousePos))
+        event->color.r += COLOR_STEP;
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_G_MINUS].pos, event->mousePos))
+        event->color.g -= COLOR_STEP;
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_G_PLUS].pos, event->mousePos))
+        event->color.g += COLOR_STEP;
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_B_MINUS].pos, event->mousePos))
+        event->color.b -= COLOR_STEP;
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_B_PLUS].pos, event->mousePos))
+        event->color.b += COLOR_STEP;
     /* draw start / continue / end */
     else if (event->state == STATE_IDLE)
     {
@@ -44,6 +57,9 @@ void ft_calc_on_mouseLeft(s_event *event, s_form *forms, s_button *buttons)
             forms[i].point[1].y = mouse_y;
             forms[i].nb_point = 2;
             forms[i].type = FORM_LINE;
+            forms[i].color.r = event->color.r;
+            forms[i].color.g = event->color.g;
+            forms[i].color.b = event->color.b;
 
             event->state = STATE_IDLE;
         }
@@ -80,9 +96,46 @@ void ft_calc_on_mouseRight(s_event *event, s_form *forms)
         forms[i].point[event->current.nb_point].x = mouse_x;
         forms[i].point[event->current.nb_point].y = mouse_y;
         forms[i].nb_point = event->current.nb_point+1;
-
         forms[i].type = FORM_POLYGON;
+        forms[i].color.r = event->color.r;
+        forms[i].color.g = event->color.g;
+        forms[i].color.b = event->color.b;
 
         event->state = STATE_IDLE;
     }
 }
+
+
+int ft_is_button_for_color(e_button button)
+{
+    return (
+        (button == BUTTON_R_MINUS) || (button == BUTTON_R_PLUS)
+        || (button == BUTTON_G_MINUS) || (button == BUTTON_G_PLUS)
+        || (button == BUTTON_B_MINUS) || (button == BUTTON_B_PLUS)
+    );
+}
+
+
+void ft_calc_update_button_color(s_button *buttons, s_color *color)
+{
+    int i;
+    int newColor;
+
+    if (color->r < 0) color->r = 0;
+    if (color->r > 255) color->r = 255;
+    if (color->g < 0) color->g = 0;
+    if (color->g > 255) color->g = 255;
+    if (color->b < 0) color->b = 0;
+    if (color->b > 255) color->b = 255;
+
+    newColor = makecol(color->r, color->g, color->b);
+
+    for (i = 0; i < BUTTON_LAST; ++i)
+    {
+        if (ft_is_button_for_color(i))
+        {
+            buttons[i].colorBackgroundDefault = newColor;
+        }
+    }
+}
+
