@@ -17,46 +17,50 @@ void ft_draw_button(s_button *button, s_vector mousePos, int selected)
 {
     s_rect *pos = &button->pos;
 
+    /* bg */
     if (ft_is_mouse_in_rect(pos, mousePos))
         rectfill(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, button->colorBackgroundHover);
     else
         rectfill(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, button->colorBackgroundDefault);
 
+    /* text */
     textout_centre_ex(g_page, font, button->text, pos->x+pos->width/2, pos->y+pos->height/2-3, makecol(0, 0, 0), -1);
 
+    /* selected */
     if (selected)
-        rect(g_page, pos->x+1, pos->y+1, pos->x+pos->width-1, pos->y+pos->height-1, makecol(255, 100, 100));
+        rect(g_page, pos->x+1, pos->y+1, pos->x+pos->width-1, pos->y+pos->height-1, makecol(150, 0, 0));
 }
 
 void ft_draw_line(s_form *form)
 {
-    int j;
+    int i, colorWanted;
     s_vector *p1 = NULL, *p2 = NULL;
-    int colorWanted = makecol(form->color.b, form->color.g, form->color.b);
 
-    for (j = 0; j < form->nb_point-1; ++j)
+    colorWanted = makecol(form->color.r, form->color.g, form->color.b);
+
+    for (i = 0; i < form->nb_point-1; ++i)
     {
-        p1 = &form->point[j];
-        p2 = &form->point[j+1];
+        p1 = &form->point[i];
+        p2 = &form->point[i+1];
 
         line(g_page, p1->x, p1->y, p2->x, p2->y, colorWanted);
     }
 }
 
 
-void ft_draw_polygone(s_form *form)
+void ft_draw_polygon(s_form *form)
 {
-    int j;
+    int i;
     s_vector *p1 = NULL, *p2 = NULL;
     int colorWanted = makecol(form->color.r, form->color.g, form->color.b);
     int colorAlpha = makecol(255, 0, 255);
 
     clear_to_color(g_page_tmp, colorWanted);
 
-    for (j = 0; j < form->nb_point-1; ++j)
+    for (i = 0; i < form->nb_point-1; ++i)
     {
-        p1 = &form->point[j];
-        p2 = &form->point[j+1];
+        p1 = &form->point[i];
+        p2 = &form->point[i+1];
 
         line(g_page_tmp, p1->x, p1->y, p2->x, p2->y, colorAlpha);
     }
@@ -68,14 +72,13 @@ void ft_draw_polygone(s_form *form)
     line(g_page_tmp, p1->x, p1->y, p2->x, p2->y, colorAlpha);
 
     floodfill(g_page_tmp, 0, 0, colorAlpha);
-
     masked_blit(g_page_tmp, g_page, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 
 void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
 {
-    int i, j;
+    int i;
     char tmp[1024];
 
     /* clear */
@@ -85,7 +88,7 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
     for (i = 0; i < NB_FORM; ++i)
     {
         if (form[i].type == FORM_POLYGON)
-            ft_draw_polygone(&form[i]);
+            ft_draw_polygon(&form[i]);
         else if (form[i].type == FORM_LINE)
             ft_draw_line(&form[i]);
     }
@@ -94,12 +97,12 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
     if (event->state == STATE_DRAWING)
     {
         s_vector *p1 = NULL, *p2 = NULL;
-        int color = makecol(128, 128, 128);
+        int color = makecol(event->color.r, event->color.g, event->color.b);
 
-        for (j = 0; j < event->current.nb_point-1; ++j)
+        for (i = 0; i < event->current.nb_point-1; ++i)
         {
-            p1 = &event->current.point[j];
-            p2 = &event->current.point[j+1];
+            p1 = &event->current.point[i];
+            p2 = &event->current.point[i+1];
 
             line(g_page, p1->x, p1->y, p2->x, p2->y, color);
         }
@@ -107,6 +110,18 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
         p1 = &event->current.point[event->current.nb_point-1];
 
         line(g_page, p1->x, p1->y, mouse_x, mouse_y, color);
+    }
+
+    /* hovered point */
+    if (event->form == FORM_EDIT)
+    {
+        if (event->pointHovered != NULL)
+        {
+            rect(g_page,
+                 event->pointHovered->x-5, event->pointHovered->y-5,
+                 event->pointHovered->x+5, event->pointHovered->y+5,
+                 makecol(150, 0, 0));
+        }
     }
 
     /* buttons : menu / forms */

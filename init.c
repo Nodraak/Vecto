@@ -70,13 +70,12 @@ void ft_init_buttons(s_button *buttons)
 
         if (ret != 12)
         {
-            fprintf(stderr, "Error loading buttons.\n");
+            fprintf(stderr, "Error loading button %d (0 indexed).\n", i);
             exit(EXIT_FAILURE);
         }
 
         tmp.colorBackgroundDefault = makecol(cbdr, cbdg, cbdb);
         tmp.colorBackgroundHover = makecol(cbhr, cbhg, cbhb);
-        tmp.text[strlen(tmp.text)] = '\0';
 
         memcpy(&buttons[i], &tmp, sizeof(s_button));
     }

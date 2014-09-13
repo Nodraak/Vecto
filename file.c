@@ -46,7 +46,7 @@ void ft_file_load(s_form forms[NB_FORM], char *path)
     {
         i_tmp = 0;
 
-        /* get tip of form */
+        /* get type of form */
         ret = sscanf(&tmp[i_tmp], "%d", (int*)&forms[i_form].type);
         if (ret != 1)
         {
@@ -68,7 +68,7 @@ void ft_file_load(s_form forms[NB_FORM], char *path)
         i_tmp = ft_file_goto_next_nb(tmp, i_tmp);
         i_tmp = ft_file_goto_next_nb(tmp, i_tmp);
 
-        /* for each data of form */
+        /* for each point of form */
         i_point = 0;
         for (;;)
         {
@@ -85,12 +85,8 @@ void ft_file_load(s_form forms[NB_FORM], char *path)
                 break;
         }
 
-        /* save form type */
-        if (i_point == 2)
-            forms[i_form].type = FORM_LINE;
-        else if (i_point > 2)
-            forms[i_form].type = FORM_POLYGON;
-        else
+        /* save nb_point */
+        if (i_point < 2)
             printf("Error %d %s - %d\n", __LINE__, __FILE__, i_point);
 
         forms[i_form].nb_point = i_point;

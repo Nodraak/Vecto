@@ -1,6 +1,14 @@
 
 /*
 
+tab / list de GROUP
+GROUP = tab / list de FORM
+
+->  G1    -    G2    -    G3
+    |          |          |
+    F1 - F2    F1 - F2    F1 - F2
+
+
 TODO
 
 Base : (16/20)
@@ -72,7 +80,6 @@ void ft_event_update(s_event *event)
 
     if (key[KEY_ESC])
         g_quit = 1;
-
 }
 
 
@@ -91,6 +98,7 @@ int main(void)
     event.color.r = 120;
     event.color.g = 120;
     event.color.b = 120;
+    event.pointHovered = NULL;
 
     while (!g_quit)
     {
@@ -111,6 +119,7 @@ int main(void)
         }
 
         ft_calc_update_button_color(buttons, &event.color);
+        ft_calc_update_closer_point(&event, forms);
 
         /* draw */
         ft_draw_all(&event, forms, buttons);

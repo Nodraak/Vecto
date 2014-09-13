@@ -25,6 +25,7 @@ typedef enum    _e_button
     BUTTON_LOAD,
     BUTTON_SAVE,
 
+    BUTTON_EDIT,
     BUTTON_LINE,
     BUTTON_POLYGON,
 
@@ -42,7 +43,8 @@ typedef enum    _e_form
 {
     FORM_NONE = 0,
     FORM_LINE = 1,
-    FORM_POLYGON = 2
+    FORM_POLYGON = 2,
+    FORM_EDIT = 3
 }               e_form;
 
 /* basic */
@@ -99,6 +101,7 @@ typedef struct      _s_event
     e_form          form;
     s_form          current;
     s_color         color;
+    s_vector        *pointHovered;
 }                   s_event;
 
 
