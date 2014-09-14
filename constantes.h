@@ -13,23 +13,24 @@
 #define NB_FORM             100
 #define NB_POINT            100
 #define COLOR_STEP          15
-#define DIST_FOR_HOVER      2000
+#define DIST_FOR_HOVER      3000
 
 typedef enum    _e_state
 {
     STATE_IDLE,
-    STATE_DRAWING,
-    STATE_EDITING
+    STATE_IN_ACTION
 }               e_state;
 
 /* TODO : merge button and form */
 
 typedef enum    _e_button
 {
+    BUTTON_NEW,
     BUTTON_LOAD,
     BUTTON_SAVE,
 
-    BUTTON_EDIT,
+    BUTTON_EDIT_POINT,
+    BUTTON_EDIT_FORM,
     BUTTON_LINE,
     BUTTON_POLYGON,
 
@@ -48,7 +49,8 @@ typedef enum    _e_form
     FORM_NONE = 0,
     FORM_LINE = 1,
     FORM_POLYGON = 2,
-    FORM_EDIT = 3
+    FORM_EDIT_POINT = 3,
+    FORM_EDIT_FORM = 4
 }               e_form;
 
 /* basic */
@@ -91,6 +93,7 @@ typedef struct      _s_form
     e_form          type;
     int             nb_point;
     s_vector        point[NB_POINT];
+    s_vector        barycenter;
     s_color         color;
 }                   s_form;
 
@@ -109,7 +112,9 @@ typedef struct      _s_event
     e_form          form;
     s_form          current;
     s_color         color;
-    s_vector        *pointHovered;
+
+    s_vector        *editPoint;
+    s_form          *editForm;
 }                   s_event;
 
 

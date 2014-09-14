@@ -94,7 +94,7 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
     }
 
     /* current form */
-    if (event->state == STATE_DRAWING)
+    if (event->state == STATE_IN_ACTION && (event->form == FORM_LINE || event->form == FORM_POLYGON))
     {
         s_vector *p1 = NULL, *p2 = NULL;
         int color = makecol(event->color.r, event->color.g, event->color.b);
@@ -113,13 +113,23 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
     }
 
     /* hovered point */
-    if (event->form == FORM_EDIT)
+    if (event->form == FORM_EDIT_POINT)
     {
-        if (event->pointHovered != NULL)
+        if (event->editPoint != NULL)
         {
             rect(g_page,
-                 event->pointHovered->x-5, event->pointHovered->y-5,
-                 event->pointHovered->x+5, event->pointHovered->y+5,
+                 event->editPoint->x-5, event->editPoint->y-5,
+                 event->editPoint->x+5, event->editPoint->y+5,
+                 makecol(150, 0, 0));
+        }
+    }
+    if (event->form == FORM_EDIT_FORM)
+    {
+        if (event->editForm != NULL)
+        {
+            rect(g_page,
+                 event->editForm->barycenter.x-5, event->editForm->barycenter.y-5,
+                 event->editForm->barycenter.x+5, event->editForm->barycenter.y+5,
                  makecol(150, 0, 0));
         }
     }

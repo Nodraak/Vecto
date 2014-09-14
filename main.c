@@ -112,7 +112,8 @@ int main(void)
     event.color.r = 120;
     event.color.g = 120;
     event.color.b = 120;
-    event.pointHovered = NULL;
+    event.editPoint = NULL;
+    event.editForm = NULL;
 
     while (!g_quit)
     {
@@ -135,7 +136,7 @@ int main(void)
         if (event.mouseUpLeft)
         {
             event.mouseUpLeft = 0;
-            if (event.form == FORM_EDIT)
+            if (event.form == FORM_EDIT_POINT || event.form == FORM_EDIT_FORM)
                 event.state = STATE_IDLE;
         }
 

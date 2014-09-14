@@ -63,7 +63,7 @@ void ft_init_buttons(s_button *buttons)
         int cbdr, cbdg, cbdb;
         int cbhr, cbhg, cbhb;
 
-        ret = fscanf(f, "%d %d %d %d | %d %d %d %d %d %d | %d %s",
+        ret = fscanf(f, "%d %d %d %d | %d %d %d %d %d %d | %d %[^\n]",
                      &tmp.pos.x, &tmp.pos.y, &tmp.pos.width, &tmp.pos.height,
                      &cbdr, &cbdg, &cbdb, &cbhr, &cbhg, &cbhb,
                      (int *)&tmp.form, tmp.text);
