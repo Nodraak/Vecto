@@ -15,6 +15,10 @@
 #define COLOR_STEP          15
 #define DIST_FOR_HOVER      3000
 
+#define BUTTON_COLOR_DEFAULT    makecol(220, 220, 220)
+#define BUTTON_COLOR_HOVER      makecol(210, 210, 210)
+
+
 typedef enum    _e_state
 {
     STATE_IDLE,
@@ -105,8 +109,7 @@ typedef struct      _s_event
     int             mouseDownRight;
     int             mouseUpLeft;
     int             mouseUpRight;
-
-    /* todo : keyboard */
+    int             keyDown[KEY_MAX];
 
     e_state         state;
     e_form          form;
@@ -114,7 +117,7 @@ typedef struct      _s_event
     s_color         color;
 
     s_vector        *editPoint;
-    s_form          *editForm;
+    int             formId;
 }                   s_event;
 
 

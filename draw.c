@@ -13,6 +13,16 @@ int ft_is_mouse_in_rect(s_rect *rect, s_vector mousePos)
 }
 
 
+void my_line(BITMAP *bmp, int x1, int y1, int x2, int y2, int c)
+{
+    line(bmp, x1, y1, x2, y2, c);
+    line(bmp, x1+1, y1, x2+1, y2, c);
+    line(bmp, x1-1, y1, x2-1, y2, c);
+    line(bmp, x1, y1+1, x2, y2+1, c);
+    line(bmp, x1, y1-1, x2, y2-1, c);
+}
+
+
 void ft_draw_button(s_button *button, s_vector mousePos, int selected)
 {
     s_rect *pos = &button->pos;
@@ -23,13 +33,16 @@ void ft_draw_button(s_button *button, s_vector mousePos, int selected)
     else
         rectfill(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, button->colorBackgroundDefault);
 
+    rect(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, makecol(128, 128, 128));
+
     /* text */
     textout_centre_ex(g_page, font, button->text, pos->x+pos->width/2, pos->y+pos->height/2-3, makecol(0, 0, 0), -1);
 
     /* selected */
     if (selected)
-        rect(g_page, pos->x+1, pos->y+1, pos->x+pos->width-1, pos->y+pos->height-1, makecol(150, 0, 0));
+        my_line(g_page, pos->x+10, pos->y+35, pos->x+90, pos->y+35, makecol(128, 128, 128));
 }
+
 
 void ft_draw_line(s_form *form)
 {
@@ -43,7 +56,7 @@ void ft_draw_line(s_form *form)
         p1 = &form->point[i];
         p2 = &form->point[i+1];
 
-        line(g_page, p1->x, p1->y, p2->x, p2->y, colorWanted);
+        my_line(g_page, p1->x, p1->y, p2->x, p2->y, colorWanted);
     }
 }
 
@@ -62,7 +75,7 @@ void ft_draw_polygon(s_form *form)
         p1 = &form->point[i];
         p2 = &form->point[i+1];
 
-        line(g_page_tmp, p1->x, p1->y, p2->x, p2->y, colorAlpha);
+        my_line(g_page_tmp, p1->x, p1->y, p2->x, p2->y, colorAlpha);
     }
 
     /* closing line */
@@ -76,7 +89,7 @@ void ft_draw_polygon(s_form *form)
 }
 
 
-void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
+void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
 {
     int i;
     char tmp[1024];
@@ -87,10 +100,13 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
     /* saved forms */
     for (i = 0; i < NB_FORM; ++i)
     {
-        if (form[i].type == FORM_POLYGON)
-            ft_draw_polygon(&form[i]);
-        else if (form[i].type == FORM_LINE)
-            ft_draw_line(&form[i]);
+        if (forms[i] != NULL)
+        {
+            if (forms[i]->type == FORM_POLYGON)
+                ft_draw_polygon(forms[i]);
+            else if (forms[i]->type == FORM_LINE)
+                ft_draw_line(forms[i]);
+        }
     }
 
     /* current form */
@@ -104,12 +120,12 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
             p1 = &event->current.point[i];
             p2 = &event->current.point[i+1];
 
-            line(g_page, p1->x, p1->y, p2->x, p2->y, color);
+            my_line(g_page, p1->x, p1->y, p2->x, p2->y, color);
         }
 
         p1 = &event->current.point[event->current.nb_point-1];
 
-        line(g_page, p1->x, p1->y, mouse_x, mouse_y, color);
+        my_line(g_page, p1->x, p1->y, mouse_x, mouse_y, color);
     }
 
     /* hovered point */
@@ -125,11 +141,11 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
     }
     if (event->form == FORM_EDIT_FORM)
     {
-        if (event->editForm != NULL)
+        if (event->formId != -1)
         {
             rect(g_page,
-                 event->editForm->barycenter.x-5, event->editForm->barycenter.y-5,
-                 event->editForm->barycenter.x+5, event->editForm->barycenter.y+5,
+                 forms[event->formId]->barycenter.x-5, forms[event->formId]->barycenter.y-5,
+                 forms[event->formId]->barycenter.x+5, forms[event->formId]->barycenter.y+5,
                  makecol(150, 0, 0));
         }
     }
@@ -140,10 +156,10 @@ void ft_draw_all(s_event *event, s_form *form, s_button *buttons)
 
     /* current color components */
     sprintf(tmp, "Rouge : %d", event->color.r);
-    textout_right_ex(g_page, font, tmp, 730, 115-3, makecol(0, 0, 0), -1);
+    textout_right_ex(g_page, font, tmp, 730, 65-3, makecol(0, 0, 0), -1);
     sprintf(tmp, "Vert : %d", event->color.g);
-    textout_right_ex(g_page, font, tmp, 730, 145-3, makecol(0, 0, 0), -1);
+    textout_right_ex(g_page, font, tmp, 730, 95-3, makecol(0, 0, 0), -1);
     sprintf(tmp, "Bleu : %d", event->color.b);
-    textout_right_ex(g_page, font, tmp, 730, 175-3, makecol(0, 0, 0), -1);
+    textout_right_ex(g_page, font, tmp, 730, 125-3, makecol(0, 0, 0), -1);
 }
 

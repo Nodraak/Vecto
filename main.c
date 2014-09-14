@@ -1,6 +1,11 @@
 
 /*
 
+S : suprimer
+A : avancer
+R : reculer
+
+
 tab / list de GROUP
 GROUP = tab / list de FORM
 
@@ -52,6 +57,7 @@ void ft_event_update(s_event *event);
 void ft_event_update(s_event *event)
 {
     static s_event old;
+    int i;
 
     event->mousePos.x = mouse_x;
     event->mousePos.y = mouse_y;
@@ -88,6 +94,12 @@ void ft_event_update(s_event *event)
     if (key[KEY_ESC])
         g_quit = 1;
 
+    for (i = 0; i < KEY_MAX; ++i)
+    {
+        event->keyDown[i] = key[i] && !old.keyDown[i];
+        old.keyDown[i] = key[i];
+    }
+
     old.mousePos.x = mouse_x;
     old.mousePos.y = mouse_y;
 }
@@ -99,21 +111,14 @@ int __attribute__((__stdcall__)) WinMain(void *hInst, void *hPrev, char *Cmd, in
 
 int main(void)
 {
-    s_form forms[NB_FORM];
+    s_form *forms[NB_FORM] = {0};
     s_event event;
     s_button buttons[BUTTON_LAST];
 
     ft_init_allegro();
     ft_init_buttons(buttons);
     ft_init_form_reset(forms);
-
-    event.state = STATE_IDLE;
-    event.form = FORM_LINE;
-    event.color.r = 120;
-    event.color.g = 120;
-    event.color.b = 120;
-    event.editPoint = NULL;
-    event.editForm = NULL;
+    ft_init_event(&event);
 
     while (!g_quit)
     {
@@ -121,32 +126,10 @@ int main(void)
         ft_event_update(&event);
 
         /* calc */
-        if (event.mouseDownLeft)
-        {
-            event.mouseDownLeft = 0;
-            ft_calc_on_mouseDownLeft(&event, forms, buttons);
-        }
-
-        if (event.mouseDownRight)
-        {
-            event.mouseDownRight = 0;
-            ft_calc_on_mouseDownRight(&event, forms);
-        }
-
-        if (event.mouseUpLeft)
-        {
-            event.mouseUpLeft = 0;
-            if (event.form == FORM_EDIT_POINT || event.form == FORM_EDIT_FORM)
-                event.state = STATE_IDLE;
-        }
-
-        if (event.mouseUpRight)
-        {
-            event.mouseUpRight = 0;
-        }
+        ft_calc_all(&event, forms, buttons);
 
         ft_calc_update_button_color(buttons, &event.color);
-        ft_calc_update_closer_point(&event, forms);
+        ft_calc_update_closer_point_or_barycenter(&event, forms);
 
         /* draw */
         ft_draw_all(&event, forms, buttons);

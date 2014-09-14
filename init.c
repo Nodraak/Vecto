@@ -60,33 +60,64 @@ void ft_init_buttons(s_button *buttons)
 
     for (i = 0; i < BUTTON_LAST; ++i)
     {
-        int cbdr, cbdg, cbdb;
-        int cbhr, cbhg, cbhb;
-
-        ret = fscanf(f, "%d %d %d %d | %d %d %d %d %d %d | %d %[^\n]",
+        ret = fscanf(f, "%d %d %d %d | %d %[^\n]",
                      &tmp.pos.x, &tmp.pos.y, &tmp.pos.width, &tmp.pos.height,
-                     &cbdr, &cbdg, &cbdb, &cbhr, &cbhg, &cbhb,
                      (int *)&tmp.form, tmp.text);
 
-        if (ret != 12)
+        if (ret != 6)
         {
             fprintf(stderr, "Error loading button %d (0 indexed).\n", i);
             exit(EXIT_FAILURE);
         }
 
-        tmp.colorBackgroundDefault = makecol(cbdr, cbdg, cbdb);
-        tmp.colorBackgroundHover = makecol(cbhr, cbhg, cbhb);
+        tmp.colorBackgroundDefault = BUTTON_COLOR_DEFAULT;
+        tmp.colorBackgroundHover = BUTTON_COLOR_HOVER;
 
         memcpy(&buttons[i], &tmp, sizeof(s_button));
     }
 }
 
 
-void ft_init_form_reset(s_form *forms)
+void ft_init_event(s_event *event)
+{
+    memset(event, 0, sizeof(s_event));
+
+    event->state = STATE_IDLE;
+    event->form = FORM_LINE;
+    event->color.r = 120;
+    event->color.g = 120;
+    event->color.b = 120;
+
+    event->formId = -1;
+}
+
+
+s_form *ft_init_form_new(void)
+{
+    s_form *ptr = NULL;
+
+    ptr = malloc(sizeof(s_form));
+    if (ptr == NULL)
+    {
+        fprintf(stderr, "Error malloc new form.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return ptr;
+}
+
+
+void ft_init_form_reset(s_form **forms)
 {
     int i;
 
     for (i = 0; i < NB_FORM; ++i)
-        forms[i].type = FORM_NONE;
+    {
+        if (forms[i] != NULL)
+        {
+            free(forms[i]);
+            forms[i] = NULL;
+        }
+    }
 }
 
