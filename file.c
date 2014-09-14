@@ -45,6 +45,12 @@ void ft_file_load(s_form *forms[NB_FORM], char *path)
     i_form = 0;
     while (fgets(tmp, 1024-1, f) != NULL)
     {
+        if (i_form >= NB_FORM)
+        {
+            printf("Error no space for another form %d %s\n", __LINE__, __FILE__);
+            exit(EXIT_FAILURE);
+        }
+
         i_tmp = 0;
         forms[i_form] = ft_init_form_new();
 

@@ -1,6 +1,8 @@
 #ifndef CALC_H
 #define CALC_H
 
+void ft_swap(s_form **ptr1, s_form **ptr2);
+
 void ft_calc_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons);
 
 void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *buttons);

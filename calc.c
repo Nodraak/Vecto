@@ -8,6 +8,16 @@
 #include "init.h"
 
 
+void ft_swap(s_form **ptr1, s_form **ptr2)
+{
+    s_form *tmp = NULL;
+
+    tmp = *ptr1;
+    *ptr1 = *ptr2;
+    *ptr2 = tmp;
+}
+
+
 void ft_calc_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
 {
     if (event->mouseDownLeft)
@@ -121,8 +131,14 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
         if (event->form == FORM_LINE)
         {
             int i = 0;
-            while (forms[i]!= NULL)
+
+            while (forms[i] != NULL && i < NB_FORM)
                 i++;
+            if (i >= NB_FORM)
+            {
+                printf("Error no space for another form %d %s\n", __LINE__, __FILE__);
+                exit(EXIT_FAILURE);
+            }
 
             forms[i] = ft_init_form_new();
 
@@ -159,8 +175,14 @@ void ft_calc_on_mouseDownRight(s_event *event, s_form *forms[NB_FORM])
     if (event->form == FORM_POLYGON)
     {
         int i = 0, j;
-        while (forms[i] != NULL)
+
+        while (forms[i] != NULL && i < NB_FORM)
             i++;
+        if (i >= NB_FORM)
+        {
+            printf("Error no space for another form %d %s\n", __LINE__, __FILE__);
+            exit(EXIT_FAILURE);
+        }
 
         forms[i] = ft_init_form_new();
 
@@ -242,6 +264,7 @@ void ft_calc_update_closer_point_or_barycenter(s_event *event, s_form *forms[NB_
         {
             ft_calc_get_closer_barycenter(event, forms);
 
+            /* delete */
             if (event->keyDown[KEY_S] && event->formId != -1)
             {
                 /* in forms tab */
@@ -249,6 +272,22 @@ void ft_calc_update_closer_point_or_barycenter(s_event *event, s_form *forms[NB_
                 forms[event->formId] = NULL;
                 /* working form */
                 event->formId = -1;
+
+                event->keyDown[KEY_S] = 0;
+            }
+            /* move to background */
+            else if (event->keyDown[KEY_R] && event->formId != -1 && event->formId > 0)
+            {
+                ft_swap(&forms[event->formId], &forms[event->formId-1]);
+                event->formId --;
+                event->keyDown[KEY_R] = 0;
+            }
+            /* move to foreground */
+            else if (event->keyDown[KEY_Q] && event->formId != -1 && event->formId < NB_FORM-1)
+            {
+                ft_swap(&forms[event->formId], &forms[event->formId+1]);
+                event->formId ++;
+                event->keyDown[KEY_Q] = 0;
             }
         }
     }
@@ -320,7 +359,7 @@ void ft_calc_get_closer_barycenter(s_event *event, s_form *forms[NB_FORM])
     }
 
     if (dist > DIST_FOR_HOVER)
-        event->formId = -1;;
+        event->formId = -1;
 }
 
 
