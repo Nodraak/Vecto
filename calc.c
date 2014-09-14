@@ -7,7 +7,7 @@
 #include "draw.h"
 
 
-void ft_calc_on_mouseLeft(s_event *event, s_form *forms, s_button *buttons)
+void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms, s_button *buttons)
 {
     /* menu */
     if (ft_is_mouse_in_rect(&buttons[BUTTON_LOAD].pos, event->mousePos))
@@ -57,7 +57,7 @@ void ft_calc_on_mouseLeft(s_event *event, s_form *forms, s_button *buttons)
         }
         else if (event->form == FORM_EDIT)
         {
-
+            event->state = STATE_EDITING;
         }
         else
             printf("Error %d %s\n", __LINE__, __FILE__);
@@ -92,10 +92,12 @@ void ft_calc_on_mouseLeft(s_event *event, s_form *forms, s_button *buttons)
         else
             printf("Error %d %s\n", __LINE__, __FILE__);
     }
+    else
+        printf("Error %d %s\n", __LINE__, __FILE__);
 }
 
 
-void ft_calc_on_mouseRight(s_event *event, s_form *forms)
+void ft_calc_on_mouseDownRight(s_event *event, s_form *forms)
 {
     if (event->form == FORM_LINE)
     {
@@ -159,25 +161,36 @@ void ft_calc_update_button_color(s_button *buttons, s_color *color)
 
 void ft_calc_update_closer_point(s_event *event, s_form *forms)
 {
-    if (event->form == FORM_EDIT)
+    if (event->state == STATE_EDITING)
     {
-        int i, j;
-        int dist = (SCREEN_WIDTH * SCREEN_WIDTH) + (SCREEN_HEIGHT * SCREEN_HEIGHT); /* big number */
-
-        for (i = 0; i < NB_FORM; ++i)
+        event->pointHovered->x += event->mouseRel.x;
+        event->pointHovered->y += event->mouseRel.y;
+    }
+    else
+    {
+        if (event->form == FORM_EDIT)
         {
-            if (forms[i].type != FORM_NONE)
-            {
-                for (j = 0; j < forms[i].nb_point; ++j)
-                {
-                    int diff_x = mouse_x - forms[i].point[j].x;
-                    int diff_y = mouse_y - forms[i].point[j].y;
-                    int cur = diff_x*diff_x + diff_y*diff_y;
+            int i, j;
+            int dist = (SCREEN_WIDTH * SCREEN_WIDTH) + (SCREEN_HEIGHT * SCREEN_HEIGHT); /* big number */
 
-                    if (cur < dist)
+            for (i = 0; i < NB_FORM; ++i)
+            {
+                if (forms[i].type != FORM_NONE)
+                {
+                    for (j = 0; j < forms[i].nb_point; ++j)
                     {
-                        dist = cur;
-                        event->pointHovered = &forms[i].point[j];
+                        int diff_x = mouse_x - forms[i].point[j].x;
+                        int diff_y = mouse_y - forms[i].point[j].y;
+                        int cur = diff_x*diff_x + diff_y*diff_y;
+
+                        if (cur < dist)
+                        {
+                            dist = cur;
+                            event->pointHovered = &forms[i].point[j];
+                        }
+
+                        if (dist > DIST_FOR_HOVER)
+                            event->pointHovered = NULL;
                     }
                 }
             }

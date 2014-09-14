@@ -13,12 +13,16 @@
 #define NB_FORM             100
 #define NB_POINT            100
 #define COLOR_STEP          15
+#define DIST_FOR_HOVER      2000
 
 typedef enum    _e_state
 {
     STATE_IDLE,
-    STATE_DRAWING
+    STATE_DRAWING,
+    STATE_EDITING
 }               e_state;
+
+/* TODO : merge button and form */
 
 typedef enum    _e_button
 {
@@ -93,8 +97,12 @@ typedef struct      _s_form
 typedef struct      _s_event
 {
     s_vector        mousePos;
-    int             mouseLeft;
-    int             mouseRight;
+    s_vector        mouseRel;
+    int             mouseDownLeft;
+    int             mouseDownRight;
+    int             mouseUpLeft;
+    int             mouseUpRight;
+
     /* todo : keyboard */
 
     e_state         state;

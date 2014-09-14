@@ -56,31 +56,45 @@ void ft_event_update(s_event *event)
     event->mousePos.x = mouse_x;
     event->mousePos.y = mouse_y;
 
-    if ((mouse_b & MOUSE_LEFT) && (old.mouseLeft == 0))
+    event->mouseRel.x = mouse_x - old.mousePos.x;
+    event->mouseRel.y = mouse_y - old.mousePos.y;
+
+    if ((mouse_b & MOUSE_LEFT) && (old.mouseDownLeft == 0))
     {
-        event->mouseLeft = 1;
-        old.mouseLeft = 1;
+        event->mouseDownLeft = 1;
+        event->mouseUpLeft = 0;
+        old.mouseDownLeft = 1;
     }
-    if ((mouse_b & MOUSE_LEFT) == 0 && (old.mouseLeft == 1))
+    if ((mouse_b & MOUSE_LEFT) == 0 && (old.mouseDownLeft == 1))
     {
-        event->mouseLeft = 0;
-        old.mouseLeft = 0;
+        event->mouseDownLeft = 0;
+        event->mouseUpLeft = 1;
+        old.mouseDownLeft = 0;
     }
 
-    if ((mouse_b & MOUSE_RIGHT) && (old.mouseRight == 0))
+    if ((mouse_b & MOUSE_RIGHT) && (old.mouseDownRight == 0))
     {
-        event->mouseRight = 1;
-        old.mouseRight = 1;
+        event->mouseDownRight = 1;
+        event->mouseUpRight = 0;
+        old.mouseDownRight = 1;
     }
-    if ((mouse_b & MOUSE_RIGHT) == 0 && (old.mouseRight == 1))
+    if ((mouse_b & MOUSE_RIGHT) == 0 && (old.mouseDownRight == 1))
     {
-        event->mouseRight = 0;
-        old.mouseRight = 0;
+        event->mouseDownRight = 0;
+        event->mouseUpRight = 1;
+        old.mouseDownRight = 0;
     }
 
     if (key[KEY_ESC])
         g_quit = 1;
+
+    old.mousePos.x = mouse_x;
+    old.mousePos.y = mouse_y;
 }
+
+
+int _mangled_main(void);
+int __attribute__((__stdcall__)) WinMain(void *hInst, void *hPrev, char *Cmd, int nShow);
 
 
 int main(void)
@@ -106,16 +120,28 @@ int main(void)
         ft_event_update(&event);
 
         /* calc */
-        if (event.mouseLeft)
+        if (event.mouseDownLeft)
         {
-            event.mouseLeft = 0;
-            ft_calc_on_mouseLeft(&event, forms, buttons);
+            event.mouseDownLeft = 0;
+            ft_calc_on_mouseDownLeft(&event, forms, buttons);
         }
 
-        if (event.mouseRight)
+        if (event.mouseDownRight)
         {
-            event.mouseRight = 0;
-            ft_calc_on_mouseRight(&event, forms);
+            event.mouseDownRight = 0;
+            ft_calc_on_mouseDownRight(&event, forms);
+        }
+
+        if (event.mouseUpLeft)
+        {
+            event.mouseUpLeft = 0;
+            if (event.form == FORM_EDIT)
+                event.state = STATE_IDLE;
+        }
+
+        if (event.mouseUpRight)
+        {
+            event.mouseUpRight = 0;
         }
 
         ft_calc_update_button_color(buttons, &event.color);
@@ -134,6 +160,7 @@ int main(void)
     destroy_bitmap(g_page_tmp);
     allegro_exit();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 END_OF_MAIN()
+
