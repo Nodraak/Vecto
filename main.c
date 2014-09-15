@@ -130,7 +130,7 @@ int main(void)
         ft_calc_all(&event, forms, buttons);
 
         ft_calc_update_button_color(buttons, &event.color);
-        ft_calc_update_closer_point_or_barycenter(&event, forms);
+        ft_calc_update_closer_point_or_center(&event, forms);
 
         /* draw */
         ft_draw_all(&event, forms, buttons);

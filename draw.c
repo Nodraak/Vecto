@@ -171,8 +171,8 @@ void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
         if (event->formId != -1)
         {
             my_rect(g_page, event,
-                 forms[event->formId]->barycenter.x-5, forms[event->formId]->barycenter.y-5,
-                 forms[event->formId]->barycenter.x+5, forms[event->formId]->barycenter.y+5,
+                 forms[event->formId]->center.x-5, forms[event->formId]->center.y-5,
+                 forms[event->formId]->center.x+5, forms[event->formId]->center.y+5,
                  makecol(150, 0, 0));
         }
     }

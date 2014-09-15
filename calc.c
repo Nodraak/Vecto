@@ -72,7 +72,7 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
     else if (ft_is_mouse_in_rect(&buttons[BUTTON_LOAD].pos, event->mousePosPxl))
     {
         ft_file_load(forms, "data.vecto");
-        ft_calc_update_all_barycenter(forms);
+        ft_calc_update_all_center(forms);
     }
     else if (ft_is_mouse_in_rect(&buttons[BUTTON_SAVE].pos, event->mousePosPxl))
         ft_file_save(forms, "data.vecto");
@@ -84,7 +84,7 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
     }
     else if (ft_is_mouse_in_rect(&buttons[BUTTON_EDIT_FORM].pos, event->mousePosPxl))
     {
-        ft_calc_update_all_barycenter(forms);
+        ft_calc_update_all_center(forms);
 
         event->form = FORM_EDIT_FORM;
         event->state = STATE_IDLE;
@@ -134,7 +134,7 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
         /* forms edit start */
         else if (event->form == FORM_EDIT_FORM)
         {
-            ft_calc_get_closer_barycenter(event, forms);
+            ft_calc_get_closer_center(event, forms);
 
             event->state = STATE_IN_ACTION;
         }
@@ -156,7 +156,7 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
             ptr->nb_point = 2;
             ptr->type = FORM_LINE;
             memcpy(&ptr->color, &event->color, sizeof(s_color));
-            ptr->barycenter = ft_calc_barycenter(ptr->point, ptr->nb_point);
+            ptr->center = ft_calc_center(ptr->point, ptr->nb_point);
 
             ft_calc_add_form(forms, ptr);
 
@@ -195,7 +195,7 @@ void ft_calc_on_mouseDownRight(s_event *event, s_form *forms[NB_FORM])
         ptr->nb_point = event->current.nb_point+1;
         ptr->type = FORM_POLYGON;
         memcpy(&ptr->color, &event->color, sizeof(s_color));
-        ptr->barycenter = ft_calc_barycenter(ptr->point, ptr->nb_point);
+        ptr->center = ft_calc_center(ptr->point, ptr->nb_point);
 
         ft_calc_add_form(forms, ptr);
 
@@ -223,7 +223,7 @@ void ft_calc_update_button_color(s_button *buttons, s_color *color)
 }
 
 
-void ft_calc_update_closer_point_or_barycenter(s_event *event, s_form *forms[NB_FORM])
+void ft_calc_update_closer_point_or_center(s_event *event, s_form *forms[NB_FORM])
 {
     if (event->state == STATE_IN_ACTION)
     {
@@ -247,8 +247,8 @@ void ft_calc_update_closer_point_or_barycenter(s_event *event, s_form *forms[NB_
                     forms[id]->point[i].y += event->mouseRel.y;
                 }
 
-                forms[id]->barycenter.x += event->mouseRel.x;
-                forms[id]->barycenter.y += event->mouseRel.y;
+                forms[id]->center.x += event->mouseRel.x;
+                forms[id]->center.y += event->mouseRel.y;
             }
         }
     }
@@ -260,7 +260,7 @@ void ft_calc_update_closer_point_or_barycenter(s_event *event, s_form *forms[NB_
         }
         else if (event->form == FORM_EDIT_FORM)
         {
-            ft_calc_get_closer_barycenter(event, forms);
+            ft_calc_get_closer_center(event, forms);
 
             /* delete */
             if (event->keyDown[KEY_S] && event->formId != -1)
@@ -301,7 +301,7 @@ void ft_calc_update_closer_point_or_barycenter(s_event *event, s_form *forms[NB_
                     ptr->point[i].x += 50;
                     ptr->point[i].y += 50;
                 }
-                ptr->barycenter = ft_calc_barycenter(ptr->point, ptr->nb_point);
+                ptr->center = ft_calc_center(ptr->point, ptr->nb_point);
 
                 ft_calc_add_form(forms, ptr);
 
@@ -312,7 +312,7 @@ void ft_calc_update_closer_point_or_barycenter(s_event *event, s_form *forms[NB_
 }
 
 
-void ft_calc_update_all_barycenter(s_form *forms[NB_FORM])
+void ft_calc_update_all_center(s_form *forms[NB_FORM])
 {
     int i;
 
@@ -320,7 +320,7 @@ void ft_calc_update_all_barycenter(s_form *forms[NB_FORM])
     {
         if (forms[i] != NULL && forms[i]->type != FORM_NONE)
         {
-            forms[i]->barycenter = ft_calc_barycenter(forms[i]->point, forms[i]->nb_point);
+            forms[i]->center = ft_calc_center(forms[i]->point, forms[i]->nb_point);
         }
     }
 }
@@ -355,7 +355,7 @@ void ft_calc_get_closer_point(s_event *event, s_form *forms[NB_FORM])
 }
 
 
-void ft_calc_get_closer_barycenter(s_event *event, s_form *forms[NB_FORM])
+void ft_calc_get_closer_center(s_event *event, s_form *forms[NB_FORM])
 {
     int i;
     int dist = (SCREEN_WIDTH * SCREEN_WIDTH) + (SCREEN_HEIGHT * SCREEN_HEIGHT); /* big number */
@@ -364,8 +364,8 @@ void ft_calc_get_closer_barycenter(s_event *event, s_form *forms[NB_FORM])
     {
         if (forms[i] != NULL)
         {
-            int diff_x = event->mousePosCoord.x - forms[i]->barycenter.x;
-            int diff_y = event->mousePosCoord.y - forms[i]->barycenter.y;
+            int diff_x = event->mousePosCoord.x - forms[i]->center.x;
+            int diff_y = event->mousePosCoord.y - forms[i]->center.y;
             int cur = diff_x*diff_x + diff_y*diff_y;
 
             if (cur < dist)
@@ -382,19 +382,22 @@ void ft_calc_get_closer_barycenter(s_event *event, s_form *forms[NB_FORM])
 
 
 
-s_vector ft_calc_barycenter(s_vector *points, int nb_point)
+s_vector ft_calc_center(s_vector *points, int nb_point)
 {
-    s_vector ret = {0, 0};
+    s_vector ret = {0, 0}, min = {BIG_NUMBER_COORD, BIG_NUMBER_COORD}, max = {-BIG_NUMBER_COORD, -BIG_NUMBER_COORD};
     int i;
 
     for (i = 0; i < nb_point; ++i)
     {
-        ret.x += points[i].x;
-        ret.y += points[i].y;
+        if (points[i].x < min.x) min.x = points[i].x;
+        if (points[i].x > max.x) max.x = points[i].x;
+
+        if (points[i].y < min.y) min.y = points[i].y;
+        if (points[i].y > max.y) max.y = points[i].y;
     }
 
-    ret.x /= nb_point;
-    ret.y /= nb_point;
+    ret.x = (min.x+max.x) / 2;
+    ret.y = (min.y+max.y) / 2;
 
     return ret;
 }

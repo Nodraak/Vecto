@@ -23,6 +23,7 @@
 #define BUTTON_COLOR_DEFAULT    makecol(220, 220, 220)
 #define BUTTON_COLOR_HOVER      makecol(210, 210, 210)
 
+#define BIG_NUMBER_COORD    10000
 
 typedef enum    _e_state
 {
@@ -102,7 +103,7 @@ typedef struct      _s_form
     e_form          type;
     int             nb_point;
     s_vector        point[NB_POINT];
-    s_vector        barycenter;
+    s_vector        center;
     s_color         color;
 }                   s_form;
 
