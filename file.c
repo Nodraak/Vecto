@@ -80,7 +80,7 @@ void ft_file_load(s_form *forms[NB_FORM], char *path)
         i_point = 0;
         for (;;)
         {
-            ret = sscanf(&tmp[i_tmp], "%d %d", &forms[i_form]->point[i_point].x, &forms[i_form]->point[i_point].y);
+            ret = sscanf(&tmp[i_tmp], "%lf %lf", &forms[i_form]->point[i_point].x, &forms[i_form]->point[i_point].y);
             if (ret != 2) /* end of line (or unexpeted error, but osef) */
                 break;
 
@@ -126,7 +126,7 @@ void ft_file_save(s_form *forms[NB_FORM], char *path)
             fprintf(f, " %d %d %d", forms[i]->color.r, forms[i]->color.g, forms[i]->color.b);
 
             for (j = 0; j < forms[i]->nb_point; ++j)
-                fprintf(f, " %d %d", forms[i]->point[j].x, forms[i]->point[j].y);
+                fprintf(f, " %f %f", forms[i]->point[j].x, forms[i]->point[j].y);
 
             fprintf(f, "\n");
         }

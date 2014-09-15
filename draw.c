@@ -5,6 +5,7 @@
 
 #include "constantes.h"
 #include "draw.h"
+#include "calc.h"
 
 
 int ft_is_mouse_in_rect(s_rect *rect, s_vector mousePos)
@@ -13,8 +14,13 @@ int ft_is_mouse_in_rect(s_rect *rect, s_vector mousePos)
 }
 
 
-void my_line(BITMAP *bmp, int x1, int y1, int x2, int y2, int c)
+void my_line(BITMAP *bmp, s_event *event, int x1, int y1, int x2, int y2, int c)
 {
+    x1 = ft_coord_to_pxl(x1, event->zoom, event->offset.x);
+    y1 = ft_coord_to_pxl(y1, event->zoom, event->offset.y);
+    x2 = ft_coord_to_pxl(x2, event->zoom, event->offset.x);
+    y2 = ft_coord_to_pxl(y2, event->zoom, event->offset.y);
+
     line(bmp, x1, y1, x2, y2, c);
     line(bmp, x1+1, y1, x2+1, y2, c);
     line(bmp, x1-1, y1, x2-1, y2, c);
@@ -22,13 +28,23 @@ void my_line(BITMAP *bmp, int x1, int y1, int x2, int y2, int c)
     line(bmp, x1, y1-1, x2, y2-1, c);
 }
 
+void my_rect(BITMAP *bmp, s_event *event, int x1, int y1, int x2, int y2, int c)
+{
+    x1 = ft_coord_to_pxl(x1, event->zoom, event->offset.x);
+    y1 = ft_coord_to_pxl(y1, event->zoom, event->offset.y);
+    x2 = ft_coord_to_pxl(x2, event->zoom, event->offset.x);
+    y2 = ft_coord_to_pxl(y2, event->zoom, event->offset.y);
 
-void ft_draw_button(s_button *button, s_vector mousePos, int selected)
+    rect(bmp, x1, y1, x2, y2, c);
+}
+
+
+void ft_draw_button(s_button *button, s_event *event, int selected)
 {
     s_rect *pos = &button->pos;
 
     /* bg */
-    if (ft_is_mouse_in_rect(pos, mousePos))
+    if (ft_is_mouse_in_rect(pos, event->mousePosPxl))
         rectfill(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, button->colorBackgroundHover);
     else
         rectfill(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, button->colorBackgroundDefault);
@@ -40,11 +56,11 @@ void ft_draw_button(s_button *button, s_vector mousePos, int selected)
 
     /* selected */
     if (selected)
-        my_line(g_page, pos->x+10, pos->y+35, pos->x+90, pos->y+35, makecol(128, 128, 128));
+        line(g_page, pos->x+10, pos->y+35, pos->x+90, pos->y+35, makecol(128, 128, 128));
 }
 
 
-void ft_draw_line(s_form *form)
+void ft_draw_line(s_form *form, s_event *event)
 {
     int i, colorWanted;
     s_vector *p1 = NULL, *p2 = NULL;
@@ -56,12 +72,12 @@ void ft_draw_line(s_form *form)
         p1 = &form->point[i];
         p2 = &form->point[i+1];
 
-        my_line(g_page, p1->x, p1->y, p2->x, p2->y, colorWanted);
+        my_line(g_page, event, p1->x, p1->y, p2->x, p2->y, colorWanted);
     }
 }
 
 
-void ft_draw_polygon(s_form *form)
+void ft_draw_polygon(s_form *form, s_event *event)
 {
     int i;
     s_vector *p1 = NULL, *p2 = NULL;
@@ -75,14 +91,14 @@ void ft_draw_polygon(s_form *form)
         p1 = &form->point[i];
         p2 = &form->point[i+1];
 
-        my_line(g_page_tmp, p1->x, p1->y, p2->x, p2->y, colorAlpha);
+        my_line(g_page_tmp, event, p1->x, p1->y, p2->x, p2->y, colorAlpha);
     }
 
     /* closing line */
     p1 = &form->point[0];
     p2 = &form->point[form->nb_point-1];
 
-    line(g_page_tmp, p1->x, p1->y, p2->x, p2->y, colorAlpha);
+    my_line(g_page_tmp, event, p1->x, p1->y, p2->x, p2->y, colorAlpha);
 
     floodfill(g_page_tmp, 0, 0, colorAlpha);
     masked_blit(g_page_tmp, g_page, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -103,9 +119,9 @@ void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
         if (forms[i] != NULL)
         {
             if (forms[i]->type == FORM_POLYGON)
-                ft_draw_polygon(forms[i]);
+                ft_draw_polygon(forms[i], event);
             else if (forms[i]->type == FORM_LINE)
-                ft_draw_line(forms[i]);
+                ft_draw_line(forms[i], event);
         }
     }
 
@@ -120,12 +136,12 @@ void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
             p1 = &event->current.point[i];
             p2 = &event->current.point[i+1];
 
-            my_line(g_page, p1->x, p1->y, p2->x, p2->y, color);
+            my_line(g_page, event, p1->x, p1->y, p2->x, p2->y, color);
         }
 
         p1 = &event->current.point[event->current.nb_point-1];
 
-        my_line(g_page, p1->x, p1->y, event->mousePos.x, event->mousePos.y, color);
+        my_line(g_page, event, p1->x, p1->y, event->mousePosCoord.x, event->mousePosCoord.y, color);
     }
 
     /* hovered point */
@@ -133,7 +149,7 @@ void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
     {
         if (event->editPoint != NULL)
         {
-            rect(g_page,
+            my_rect(g_page, event,
                  event->editPoint->x-5, event->editPoint->y-5,
                  event->editPoint->x+5, event->editPoint->y+5,
                  makecol(150, 0, 0));
@@ -143,7 +159,7 @@ void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
     {
         if (event->formId != -1)
         {
-            rect(g_page,
+            my_rect(g_page, event,
                  forms[event->formId]->barycenter.x-5, forms[event->formId]->barycenter.y-5,
                  forms[event->formId]->barycenter.x+5, forms[event->formId]->barycenter.y+5,
                  makecol(150, 0, 0));
@@ -152,7 +168,7 @@ void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
 
     /* buttons : menu / forms */
     for (i = 0; i < BUTTON_LAST; ++i)
-        ft_draw_button(&buttons[i], event->mousePos, event->form == buttons[i].form);
+        ft_draw_button(&buttons[i], event, event->form == buttons[i].form);
 
     /* current color components */
     sprintf(tmp, "Rouge : %d", event->color.r);

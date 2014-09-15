@@ -17,5 +17,7 @@ void ft_calc_get_closer_barycenter(s_event *event, s_form *forms[NB_FORM]);
 s_vector ft_calc_barycenter(s_vector *points, int nb_point);
 
 void ft_calc_add_form(s_form *forms[NB_FORM], s_form *new);
+int ft_pxl_to_coord(double pxl, double zoom, double offset);
+int ft_coord_to_pxl(double coord, double zoom, double offset);
 
 #endif /* CALC_H_INCLUDED */

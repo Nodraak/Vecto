@@ -14,6 +14,8 @@
 #define NB_POINT            100
 #define COLOR_STEP          15
 #define DIST_FOR_HOVER      3000
+#define ZOOM_FACTOR         1.02
+#define MOVE_SPEED          6
 
 #define BUTTON_COLOR_DEFAULT    makecol(220, 220, 220)
 #define BUTTON_COLOR_HOVER      makecol(210, 210, 210)
@@ -61,8 +63,8 @@ typedef enum    _e_form
 
 typedef struct      _s_vector
 {
-    int             x;
-    int             y;
+    double          x;
+    double          y;
 }                   s_vector;
 
 typedef struct      _s_rect
@@ -103,7 +105,8 @@ typedef struct      _s_form
 
 typedef struct      _s_event
 {
-    s_vector        mousePos;
+    s_vector        mousePosPxl;
+    s_vector        mousePosCoord;
     s_vector        mouseRel;
     int             mouseDownLeft;
     int             mouseDownRight;
@@ -118,6 +121,9 @@ typedef struct      _s_event
 
     s_vector        *editPoint;
     int             formId;
+
+    s_vector        offset;
+    double          zoom;
 }                   s_event;
 
 

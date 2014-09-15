@@ -35,6 +35,7 @@ void ft_calc_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
     if (event->mouseUpLeft)
     {
         event->mouseUpLeft = 0;
+
         if (event->form == FORM_EDIT_POINT || event->form == FORM_EDIT_FORM)
             event->state = STATE_IDLE;
     }
@@ -43,56 +44,73 @@ void ft_calc_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
     {
         event->mouseUpRight = 0;
     }
+
+    /* zoom minus */
+    if (event->keyDown[KEY_SEMICOLON])
+        event->zoom /= ZOOM_FACTOR;
+    /* zoom plus */
+    if (event->keyDown[KEY_P])
+        event->zoom *= ZOOM_FACTOR;
+    /* move drawing */
+    if (event->keyDown[KEY_UP])
+        event->offset.y += MOVE_SPEED / event->zoom;
+    if (event->keyDown[KEY_DOWN])
+        event->offset.y -= MOVE_SPEED / event->zoom;
+    if (event->keyDown[KEY_RIGHT])
+        event->offset.x -= MOVE_SPEED / event->zoom;
+    if (event->keyDown[KEY_LEFT])
+        event->offset.x += MOVE_SPEED / event->zoom;
+
 }
 
 
 void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
 {
     /* menu */
-    if (ft_is_mouse_in_rect(&buttons[BUTTON_NEW].pos, event->mousePos))
+    if (ft_is_mouse_in_rect(&buttons[BUTTON_NEW].pos, event->mousePosPxl))
         ft_init_form_reset(forms);
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_LOAD].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_LOAD].pos, event->mousePosPxl))
     {
         ft_file_load(forms, "data.vecto");
         ft_calc_update_all_barycenter(forms);
     }
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_SAVE].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_SAVE].pos, event->mousePosPxl))
         ft_file_save(forms, "data.vecto");
     /* form */
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_EDIT_POINT].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_EDIT_POINT].pos, event->mousePosPxl))
     {
         event->form = FORM_EDIT_POINT;
         event->state = STATE_IDLE;
     }
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_EDIT_FORM].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_EDIT_FORM].pos, event->mousePosPxl))
     {
         ft_calc_update_all_barycenter(forms);
 
         event->form = FORM_EDIT_FORM;
         event->state = STATE_IDLE;
     }
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_LINE].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_LINE].pos, event->mousePosPxl))
     {
         event->form = FORM_LINE;
         event->state = STATE_IDLE;
     }
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_POLYGON].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_POLYGON].pos, event->mousePosPxl))
     {
         event->form = FORM_POLYGON;
         event->state = STATE_IDLE;
     }
     /* colors */
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_R_MINUS].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_R_MINUS].pos, event->mousePosPxl))
         event->color.r -= COLOR_STEP;
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_R_PLUS].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_R_PLUS].pos, event->mousePosPxl))
         event->color.r += COLOR_STEP;
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_G_MINUS].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_G_MINUS].pos, event->mousePosPxl))
         event->color.g -= COLOR_STEP;
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_G_PLUS].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_G_PLUS].pos, event->mousePosPxl))
         event->color.g += COLOR_STEP;
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_B_MINUS].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_B_MINUS].pos, event->mousePosPxl))
         event->color.b -= COLOR_STEP;
-    else if (ft_is_mouse_in_rect(&buttons[BUTTON_B_PLUS].pos, event->mousePos))
+    else if (ft_is_mouse_in_rect(&buttons[BUTTON_B_PLUS].pos, event->mousePosPxl))
         event->color.b += COLOR_STEP;
     /* start action or drawing */
     else if (event->state == STATE_IDLE)
@@ -101,8 +119,8 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
         if (event->form == FORM_LINE || event->form == FORM_POLYGON)
         {
             event->current.nb_point = 1;
-            event->current.point[0].x = event->mousePos.x;
-            event->current.point[0].y = event->mousePos.y;
+            event->current.point[0].x = event->mousePosCoord.x;
+            event->current.point[0].y = event->mousePosCoord.y;
 
             event->state = STATE_IN_ACTION;
         }
@@ -133,8 +151,8 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
 
             ptr->point[0].x = event->current.point[0].x;
             ptr->point[0].y = event->current.point[0].y;
-            ptr->point[1].x = event->mousePos.x;
-            ptr->point[1].y = event->mousePos.y;
+            ptr->point[1].x = event->mousePosCoord.x;
+            ptr->point[1].y = event->mousePosCoord.y;
             ptr->nb_point = 2;
             ptr->type = FORM_LINE;
             memcpy(&ptr->color, &event->color, sizeof(s_color));
@@ -147,8 +165,8 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
         /* polygon */
         else if (event->form == FORM_POLYGON)
         {
-            event->current.point[event->current.nb_point].x = event->mousePos.x;
-            event->current.point[event->current.nb_point].y = event->mousePos.y;
+            event->current.point[event->current.nb_point].x = event->mousePosCoord.x;
+            event->current.point[event->current.nb_point].y = event->mousePosCoord.y;
             event->current.nb_point ++;
         }
         else
@@ -172,8 +190,8 @@ void ft_calc_on_mouseDownRight(s_event *event, s_form *forms[NB_FORM])
             ptr->point[j].y = event->current.point[j].y;
         }
 
-        ptr->point[event->current.nb_point].x = event->mousePos.x;
-        ptr->point[event->current.nb_point].y = event->mousePos.y;
+        ptr->point[event->current.nb_point].x = event->mousePosCoord.x;
+        ptr->point[event->current.nb_point].y = event->mousePosCoord.y;
         ptr->nb_point = event->current.nb_point+1;
         ptr->type = FORM_POLYGON;
         memcpy(&ptr->color, &event->color, sizeof(s_color));
@@ -319,8 +337,8 @@ void ft_calc_get_closer_point(s_event *event, s_form *forms[NB_FORM])
         {
             for (j = 0; j < forms[i]->nb_point; ++j)
             {
-                int diff_x = event->mousePos.x - forms[i]->point[j].x;
-                int diff_y = event->mousePos.y - forms[i]->point[j].y;
+                int diff_x = event->mousePosCoord.x - forms[i]->point[j].x;
+                int diff_y = event->mousePosCoord.y - forms[i]->point[j].y;
                 int cur = diff_x*diff_x + diff_y*diff_y;
 
                 if (cur < dist)
@@ -346,8 +364,8 @@ void ft_calc_get_closer_barycenter(s_event *event, s_form *forms[NB_FORM])
     {
         if (forms[i] != NULL)
         {
-            int diff_x = event->mousePos.x - forms[i]->barycenter.x;
-            int diff_y = event->mousePos.y - forms[i]->barycenter.y;
+            int diff_x = event->mousePosCoord.x - forms[i]->barycenter.x;
+            int diff_y = event->mousePosCoord.y - forms[i]->barycenter.y;
             int cur = diff_x*diff_x + diff_y*diff_y;
 
             if (cur < dist)
@@ -396,5 +414,17 @@ void ft_calc_add_form(s_form *forms[NB_FORM], s_form *new)
     }
 
     forms[i] = new;
+}
+
+
+int ft_pxl_to_coord(double pxl, double zoom, double offset)
+{
+    return pxl/zoom - offset;
+}
+
+
+int ft_coord_to_pxl(double coord, double zoom, double offset)
+{
+    return (coord+offset) * zoom;
 }
 

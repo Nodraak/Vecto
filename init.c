@@ -87,6 +87,9 @@ void ft_init_event(s_event *event)
     event->color.r = 120;
     event->color.g = 120;
     event->color.b = 120;
+    event->offset.x = 0;
+    event->offset.y = 0;
+    event->zoom = 1;
 
     event->formId = -1;
 }

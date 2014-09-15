@@ -4,7 +4,9 @@
 S : suprimer
 A : avancer
 R : reculer
-
+D : duppliquer
+P : zoom plus
+M : zoom moins
 
 tab / list de GROUP
 GROUP = tab / list de FORM
@@ -59,36 +61,27 @@ void ft_event_update(s_event *event)
     static s_event old;
     int i;
 
-    event->mousePos.x = mouse_x;
-    event->mousePos.y = mouse_y;
+    event->mousePosPxl.x = mouse_x;
+    event->mousePosPxl.y = mouse_y;
 
-    event->mouseRel.x = event->mousePos.x - old.mousePos.x;
-    event->mouseRel.y = event->mousePos.y - old.mousePos.y;
+    event->mousePosCoord.x = ft_pxl_to_coord(mouse_x, event->zoom, event->offset.x);
+    event->mousePosCoord.y = ft_pxl_to_coord(mouse_y, event->zoom, event->offset.y);
 
-    if ((mouse_b & MOUSE_LEFT) && (old.mouseDownLeft == 0))
+    event->mouseRel.x = event->mousePosCoord.x - old.mousePosCoord.x;
+    event->mouseRel.y = event->mousePosCoord.y - old.mousePosCoord.y;
+
+    if ((mouse_b & MOUSE_LEFT) != old.mouseDownLeft)
     {
-        event->mouseDownLeft = 1;
-        event->mouseUpLeft = 0;
-        old.mouseDownLeft = 1;
-    }
-    if ((mouse_b & MOUSE_LEFT) == 0 && (old.mouseDownLeft == 1))
-    {
-        event->mouseDownLeft = 0;
-        event->mouseUpLeft = 1;
-        old.mouseDownLeft = 0;
+        event->mouseDownLeft = mouse_b & MOUSE_LEFT;
+        old.mouseDownLeft = mouse_b & MOUSE_LEFT;
+        event->mouseUpLeft = !(mouse_b & MOUSE_LEFT);
     }
 
-    if ((mouse_b & MOUSE_RIGHT) && (old.mouseDownRight == 0))
+    if ((mouse_b & MOUSE_RIGHT) != old.mouseDownRight)
     {
-        event->mouseDownRight = 1;
-        event->mouseUpRight = 0;
-        old.mouseDownRight = 1;
-    }
-    if ((mouse_b & MOUSE_RIGHT) == 0 && (old.mouseDownRight == 1))
-    {
-        event->mouseDownRight = 0;
-        event->mouseUpRight = 1;
-        old.mouseDownRight = 0;
+        event->mouseDownRight = mouse_b & MOUSE_RIGHT;
+        old.mouseDownRight = mouse_b & MOUSE_RIGHT;
+        event->mouseUpRight = !(mouse_b & MOUSE_RIGHT);
     }
 
     if (key[KEY_ESC])
@@ -96,12 +89,15 @@ void ft_event_update(s_event *event)
 
     for (i = 0; i < KEY_MAX; ++i)
     {
-        event->keyDown[i] = key[i] && !old.keyDown[i];
-        old.keyDown[i] = key[i];
+        if (key[i] != old.keyDown[i])
+        {
+            event->keyDown[i] = key[i];
+            old.keyDown[i] = key[i];
+        }
     }
 
-    old.mousePos.x = event->mousePos.x;
-    old.mousePos.y = event->mousePos.x;
+    old.mousePosCoord.x = event->mousePosCoord.x;
+    old.mousePosCoord.y = event->mousePosCoord.y;
 }
 
 
