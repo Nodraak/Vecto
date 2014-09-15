@@ -2,11 +2,13 @@
 /*
 
 S : suprimer
-A : avancer
+A : avancer (Q en qwerty)
 R : reculer
 D : duppliquer
 P : zoom plus
 M : zoom moins
+Q : quitter (A en qwerty)
+ESC : abandonenr la forme en cours
 
 tab / list de GROUP
 GROUP = tab / list de FORM
@@ -84,9 +86,6 @@ void ft_event_update(s_event *event)
         event->mouseUpRight = !(mouse_b & MOUSE_RIGHT);
     }
 
-    if (key[KEY_ESC])
-        g_quit = 1;
-
     for (i = 0; i < KEY_MAX; ++i)
     {
         if (key[i] != old.keyDown[i])
@@ -95,6 +94,12 @@ void ft_event_update(s_event *event)
             old.keyDown[i] = key[i];
         }
     }
+
+    if (event->keyDown[KEY_ESC])
+        event->state = STATE_IDLE;
+    if (event->keyDown[KEY_A])
+        g_quit = 1;
+
 
     old.mousePosCoord.x = event->mousePosCoord.x;
     old.mousePosCoord.y = event->mousePosCoord.y;

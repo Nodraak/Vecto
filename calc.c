@@ -350,7 +350,7 @@ void ft_calc_get_closer_point(s_event *event, s_form *forms[NB_FORM])
         }
     }
 
-    if (dist > DIST_FOR_HOVER)
+    if (dist > DIST_FOR_HOVER / (event->zoom*event->zoom))
         event->editPoint = NULL;
 }
 
@@ -376,7 +376,7 @@ void ft_calc_get_closer_barycenter(s_event *event, s_form *forms[NB_FORM])
         }
     }
 
-    if (dist > DIST_FOR_HOVER)
+    if (dist > DIST_FOR_HOVER / (event->zoom*event->zoom))
         event->formId = -1;
 }
 

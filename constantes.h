@@ -6,6 +6,9 @@
 #define MOUSE_LEFT          (1 << 0)
 #define MOUSE_RIGHT         (1 << 1)
 
+#define FLAG_FAT_LINE       (1 << 0)
+#define FLAG_SCALE_COORD    (1 << 1)
+
 #define FPS                 50
 #define SCREEN_WIDTH        800
 #define SCREEN_HEIGHT       600
@@ -13,7 +16,7 @@
 #define NB_FORM             100
 #define NB_POINT            100
 #define COLOR_STEP          15
-#define DIST_FOR_HOVER      3000
+#define DIST_FOR_HOVER      (100*100)   /* 100 pxl */
 #define ZOOM_FACTOR         1.02
 #define MOVE_SPEED          6
 

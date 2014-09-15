@@ -14,27 +14,33 @@ int ft_is_mouse_in_rect(s_rect *rect, s_vector mousePos)
 }
 
 
-void my_line(BITMAP *bmp, s_event *event, int x1, int y1, int x2, int y2, int c)
+void ft_scale_coord(double zoom, s_vector offset, int *x1, int *y1, int *x2, int *y2)
 {
-    x1 = ft_coord_to_pxl(x1, event->zoom, event->offset.x);
-    y1 = ft_coord_to_pxl(y1, event->zoom, event->offset.y);
-    x2 = ft_coord_to_pxl(x2, event->zoom, event->offset.x);
-    y2 = ft_coord_to_pxl(y2, event->zoom, event->offset.y);
+    *x1 = ft_coord_to_pxl(*x1, zoom, offset.x);
+    *y1 = ft_coord_to_pxl(*y1, zoom, offset.y);
+    *x2 = ft_coord_to_pxl(*x2, zoom, offset.x);
+    *y2 = ft_coord_to_pxl(*y2, zoom, offset.y);
+}
+
+void my_line(BITMAP *bmp, s_event *event, int x1, int y1, int x2, int y2, int c, int flags)
+{
+    if (flags & FLAG_SCALE_COORD)
+        ft_scale_coord(event->zoom, event->offset, &x1, &y1, &x2, &y2);
 
     line(bmp, x1, y1, x2, y2, c);
-    line(bmp, x1+1, y1, x2+1, y2, c);
-    line(bmp, x1-1, y1, x2-1, y2, c);
-    line(bmp, x1, y1+1, x2, y2+1, c);
-    line(bmp, x1, y1-1, x2, y2-1, c);
+    if (flags & FLAG_FAT_LINE)
+    {
+        line(bmp, x1+1, y1, x2+1, y2, c);
+        line(bmp, x1-1, y1, x2-1, y2, c);
+        line(bmp, x1, y1+1, x2, y2+1, c);
+        line(bmp, x1, y1-1, x2, y2-1, c);
+    }
 }
+
 
 void my_rect(BITMAP *bmp, s_event *event, int x1, int y1, int x2, int y2, int c)
 {
-    x1 = ft_coord_to_pxl(x1, event->zoom, event->offset.x);
-    y1 = ft_coord_to_pxl(y1, event->zoom, event->offset.y);
-    x2 = ft_coord_to_pxl(x2, event->zoom, event->offset.x);
-    y2 = ft_coord_to_pxl(y2, event->zoom, event->offset.y);
-
+    ft_scale_coord(event->zoom, event->offset, &x1, &y1, &x2, &y2);
     rect(bmp, x1, y1, x2, y2, c);
 }
 
@@ -56,7 +62,7 @@ void ft_draw_button(s_button *button, s_event *event, int selected)
 
     /* selected */
     if (selected)
-        line(g_page, pos->x+10, pos->y+35, pos->x+90, pos->y+35, makecol(128, 128, 128));
+        my_line(g_page, event, pos->x+10, pos->y+35, pos->x+90, pos->y+35, makecol(128, 128, 128), FLAG_FAT_LINE);
 }
 
 
@@ -72,7 +78,7 @@ void ft_draw_line(s_form *form, s_event *event)
         p1 = &form->point[i];
         p2 = &form->point[i+1];
 
-        my_line(g_page, event, p1->x, p1->y, p2->x, p2->y, colorWanted);
+        my_line(g_page, event, p1->x, p1->y, p2->x, p2->y, colorWanted, FLAG_FAT_LINE | FLAG_SCALE_COORD);
     }
 }
 
@@ -91,16 +97,21 @@ void ft_draw_polygon(s_form *form, s_event *event)
         p1 = &form->point[i];
         p2 = &form->point[i+1];
 
-        my_line(g_page_tmp, event, p1->x, p1->y, p2->x, p2->y, colorAlpha);
+        my_line(g_page_tmp, event, p1->x, p1->y, p2->x, p2->y, colorAlpha, FLAG_SCALE_COORD);
     }
 
     /* closing line */
     p1 = &form->point[0];
     p2 = &form->point[form->nb_point-1];
 
-    my_line(g_page_tmp, event, p1->x, p1->y, p2->x, p2->y, colorAlpha);
+    my_line(g_page_tmp, event, p1->x, p1->y, p2->x, p2->y, colorAlpha, FLAG_SCALE_COORD);
 
+    /* TODO : upgrade this dirty hack */
     floodfill(g_page_tmp, 0, 0, colorAlpha);
+    floodfill(g_page_tmp, 0, SCREEN_HEIGHT-1, colorAlpha);
+    floodfill(g_page_tmp, SCREEN_WIDTH-1, 0, colorAlpha);
+    floodfill(g_page_tmp, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, colorAlpha);
+
     masked_blit(g_page_tmp, g_page, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
@@ -136,12 +147,12 @@ void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
             p1 = &event->current.point[i];
             p2 = &event->current.point[i+1];
 
-            my_line(g_page, event, p1->x, p1->y, p2->x, p2->y, color);
+            my_line(g_page, event, p1->x, p1->y, p2->x, p2->y, color, FLAG_FAT_LINE | FLAG_SCALE_COORD);
         }
 
         p1 = &event->current.point[event->current.nb_point-1];
 
-        my_line(g_page, event, p1->x, p1->y, event->mousePosCoord.x, event->mousePosCoord.y, color);
+        my_line(g_page, event, p1->x, p1->y, event->mousePosCoord.x, event->mousePosCoord.y, color, FLAG_FAT_LINE | FLAG_SCALE_COORD);
     }
 
     /* hovered point */
