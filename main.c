@@ -62,8 +62,8 @@ void ft_event_update(s_event *event)
     event->mousePos.x = mouse_x;
     event->mousePos.y = mouse_y;
 
-    event->mouseRel.x = mouse_x - old.mousePos.x;
-    event->mouseRel.y = mouse_y - old.mousePos.y;
+    event->mouseRel.x = event->mousePos.x - old.mousePos.x;
+    event->mouseRel.y = event->mousePos.y - old.mousePos.y;
 
     if ((mouse_b & MOUSE_LEFT) && (old.mouseDownLeft == 0))
     {
@@ -100,8 +100,8 @@ void ft_event_update(s_event *event)
         old.keyDown[i] = key[i];
     }
 
-    old.mousePos.x = mouse_x;
-    old.mousePos.y = mouse_y;
+    old.mousePos.x = event->mousePos.x;
+    old.mousePos.y = event->mousePos.x;
 }
 
 

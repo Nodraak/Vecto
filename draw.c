@@ -125,7 +125,7 @@ void ft_draw_all(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
 
         p1 = &event->current.point[event->current.nb_point-1];
 
-        my_line(g_page, p1->x, p1->y, mouse_x, mouse_y, color);
+        my_line(g_page, p1->x, p1->y, event->mousePos.x, event->mousePos.y, color);
     }
 
     /* hovered point */

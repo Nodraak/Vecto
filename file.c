@@ -52,7 +52,7 @@ void ft_file_load(s_form *forms[NB_FORM], char *path)
         }
 
         i_tmp = 0;
-        forms[i_form] = ft_init_form_new();
+        forms[i_form] = ft_init_form_alloc();
 
         /* get type of form */
         ret = sscanf(&tmp[i_tmp], "%d", (int*)&forms[i_form]->type);

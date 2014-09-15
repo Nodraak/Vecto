@@ -92,7 +92,7 @@ void ft_init_event(s_event *event)
 }
 
 
-s_form *ft_init_form_new(void)
+s_form *ft_init_form_alloc(void)
 {
     s_form *ptr = NULL;
 

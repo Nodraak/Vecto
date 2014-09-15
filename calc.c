@@ -100,10 +100,9 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
         /* draw start */
         if (event->form == FORM_LINE || event->form == FORM_POLYGON)
         {
-
             event->current.nb_point = 1;
-            event->current.point[0].x = mouse_x;
-            event->current.point[0].y = mouse_y;
+            event->current.point[0].x = event->mousePos.x;
+            event->current.point[0].y = event->mousePos.y;
 
             event->state = STATE_IN_ACTION;
         }
@@ -130,36 +129,26 @@ void ft_calc_on_mouseDownLeft(s_event *event, s_form *forms[NB_FORM], s_button *
         /* line */
         if (event->form == FORM_LINE)
         {
-            int i = 0;
+            s_form *ptr = ft_init_form_alloc();
 
-            while (forms[i] != NULL && i < NB_FORM)
-                i++;
-            if (i >= NB_FORM)
-            {
-                printf("Error no space for another form %d %s\n", __LINE__, __FILE__);
-                exit(EXIT_FAILURE);
-            }
+            ptr->point[0].x = event->current.point[0].x;
+            ptr->point[0].y = event->current.point[0].y;
+            ptr->point[1].x = event->mousePos.x;
+            ptr->point[1].y = event->mousePos.y;
+            ptr->nb_point = 2;
+            ptr->type = FORM_LINE;
+            memcpy(&ptr->color, &event->color, sizeof(s_color));
+            ptr->barycenter = ft_calc_barycenter(ptr->point, ptr->nb_point);
 
-            forms[i] = ft_init_form_new();
-
-            forms[i]->point[0].x = event->current.point[0].x;
-            forms[i]->point[0].y = event->current.point[0].y;
-            forms[i]->point[1].x = mouse_x;
-            forms[i]->point[1].y = mouse_y;
-            forms[i]->nb_point = 2;
-            forms[i]->type = FORM_LINE;
-            forms[i]->color.r = event->color.r;
-            forms[i]->color.g = event->color.g;
-            forms[i]->color.b = event->color.b;
-            forms[i]->barycenter = ft_calc_barycenter(forms[i]->point, forms[i]->nb_point);
+            ft_calc_add_form(forms, ptr);
 
             event->state = STATE_IDLE;
         }
         /* polygon */
         else if (event->form == FORM_POLYGON)
         {
-            event->current.point[event->current.nb_point].x = mouse_x;
-            event->current.point[event->current.nb_point].y = mouse_y;
+            event->current.point[event->current.nb_point].x = event->mousePos.x;
+            event->current.point[event->current.nb_point].y = event->mousePos.y;
             event->current.nb_point ++;
         }
         else
@@ -174,32 +163,23 @@ void ft_calc_on_mouseDownRight(s_event *event, s_form *forms[NB_FORM])
 {
     if (event->form == FORM_POLYGON)
     {
-        int i = 0, j;
-
-        while (forms[i] != NULL && i < NB_FORM)
-            i++;
-        if (i >= NB_FORM)
-        {
-            printf("Error no space for another form %d %s\n", __LINE__, __FILE__);
-            exit(EXIT_FAILURE);
-        }
-
-        forms[i] = ft_init_form_new();
+        int j;
+        s_form *ptr = ft_init_form_alloc();
 
         for (j = 0; j < event->current.nb_point; ++j)
         {
-            forms[i]->point[j].x = event->current.point[j].x;
-            forms[i]->point[j].y = event->current.point[j].y;
+            ptr->point[j].x = event->current.point[j].x;
+            ptr->point[j].y = event->current.point[j].y;
         }
 
-        forms[i]->point[event->current.nb_point].x = mouse_x;
-        forms[i]->point[event->current.nb_point].y = mouse_y;
-        forms[i]->nb_point = event->current.nb_point+1;
-        forms[i]->type = FORM_POLYGON;
-        forms[i]->color.r = event->color.r;
-        forms[i]->color.g = event->color.g;
-        forms[i]->color.b = event->color.b;
-        forms[i]->barycenter = ft_calc_barycenter(forms[i]->point, forms[i]->nb_point);
+        ptr->point[event->current.nb_point].x = event->mousePos.x;
+        ptr->point[event->current.nb_point].y = event->mousePos.y;
+        ptr->nb_point = event->current.nb_point+1;
+        ptr->type = FORM_POLYGON;
+        memcpy(&ptr->color, &event->color, sizeof(s_color));
+        ptr->barycenter = ft_calc_barycenter(ptr->point, ptr->nb_point);
+
+        ft_calc_add_form(forms, ptr);
 
         event->state = STATE_IDLE;
     }
@@ -289,6 +269,26 @@ void ft_calc_update_closer_point_or_barycenter(s_event *event, s_form *forms[NB_
                 event->formId ++;
                 event->keyDown[KEY_Q] = 0;
             }
+            /* copy */
+            else if (event->keyDown[KEY_D] && event->formId != -1)
+            {
+                int i = 0;
+                s_form *ptr = NULL;
+
+                ptr = ft_init_form_alloc();
+                memcpy(ptr, forms[event->formId], sizeof(s_form));
+
+                for (i = 0; i < ptr->nb_point; ++i)
+                {
+                    ptr->point[i].x += 50;
+                    ptr->point[i].y += 50;
+                }
+                ptr->barycenter = ft_calc_barycenter(ptr->point, ptr->nb_point);
+
+                ft_calc_add_form(forms, ptr);
+
+                event->keyDown[KEY_D] = 0;
+            }
         }
     }
 }
@@ -319,8 +319,8 @@ void ft_calc_get_closer_point(s_event *event, s_form *forms[NB_FORM])
         {
             for (j = 0; j < forms[i]->nb_point; ++j)
             {
-                int diff_x = mouse_x - forms[i]->point[j].x;
-                int diff_y = mouse_y - forms[i]->point[j].y;
+                int diff_x = event->mousePos.x - forms[i]->point[j].x;
+                int diff_y = event->mousePos.y - forms[i]->point[j].y;
                 int cur = diff_x*diff_x + diff_y*diff_y;
 
                 if (cur < dist)
@@ -346,8 +346,8 @@ void ft_calc_get_closer_barycenter(s_event *event, s_form *forms[NB_FORM])
     {
         if (forms[i] != NULL)
         {
-            int diff_x = mouse_x - forms[i]->barycenter.x;
-            int diff_y = mouse_y - forms[i]->barycenter.y;
+            int diff_x = event->mousePos.x - forms[i]->barycenter.x;
+            int diff_y = event->mousePos.y - forms[i]->barycenter.y;
             int cur = diff_x*diff_x + diff_y*diff_y;
 
             if (cur < dist)
@@ -379,5 +379,22 @@ s_vector ft_calc_barycenter(s_vector *points, int nb_point)
     ret.y /= nb_point;
 
     return ret;
+}
+
+
+void ft_calc_add_form(s_form *forms[NB_FORM], s_form *new)
+{
+    int i = 0;
+
+    while (i < NB_FORM && forms[i] != NULL)
+        ++i;
+
+    if (i >= NB_FORM)
+    {
+        printf("No more space for another form %d %s.\n", __LINE__, __FILE__);
+        exit(EXIT_FAILURE);
+    }
+
+    forms[i] = new;
 }
 
