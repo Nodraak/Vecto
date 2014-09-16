@@ -3,11 +3,18 @@
 
 #include <allegro.h>
 
+/* private */
+
 #define MOUSE_LEFT          (1 << 0)
 #define MOUSE_RIGHT         (1 << 1)
 
 #define FLAG_FAT_LINE       (1 << 0)
 #define FLAG_SCALE_COORD    (1 << 1)
+
+#define ft_pxl_to_coord(pxl, zoom, offset)  (pxl/zoom - offset)
+#define ft_coord_to_pxl(coord, zoom, offset)  ((coord+offset) * zoom)
+
+/* custom */
 
 #define FPS                 50
 #define SCREEN_WIDTH        800
@@ -16,7 +23,7 @@
 #define NB_FORM             100
 #define NB_POINT            100
 #define COLOR_STEP          15
-#define DIST_FOR_HOVER      (100*100)   /* 100 pxl */
+#define DIST_FOR_HOVER      (150*150)
 #define ZOOM_FACTOR         1.02
 #define MOVE_SPEED          6
 
@@ -24,6 +31,7 @@
 #define BUTTON_COLOR_HOVER      makecol(210, 210, 210)
 
 #define BIG_NUMBER_COORD    10000
+
 
 typedef enum    _e_state
 {
@@ -130,6 +138,34 @@ typedef struct      _s_event
     double          zoom;
 }                   s_event;
 
+/*
+
+in
+    s_vector        mousePosPxl;
+    s_vector        mousePosCoord;
+    s_vector        mouseRel;
+    int             mouseDownLeft;
+    int             mouseDownRight;
+    int             mouseUpLeft;
+    int             mouseUpRight;
+    int             keyDown[KEY_MAX];
+
+drawing
+    s_forms         *forms[NB_FORM];
+
+    e_state         state;          actionState
+    e_form          form;           actionType
+
+    s_vector        *editPoint;
+    int             formId;         editFormId
+    s_form          current;        drawingForm
+
+    s_color         color;
+
+    s_vector        offset;
+    double          zoom;
+
+*/
 
 extern int g_quit;
 extern BITMAP *g_page;

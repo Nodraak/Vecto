@@ -45,65 +45,17 @@ Doc -> http://alleg.sourceforge.net/stabledocs/en/allegro.html
 #include <allegro.h>
 
 #include "constantes.h"
-#include "file.h"
-#include "draw.h"
-#include "calc.h"
-#include "init.h"
+#include "ft_drawing.h"
+#include "ft_form.h"
+#include "ft_event.h"
+#include "ft_button.h"
+#include "ft_allegro.h"
 
 
 int g_quit = 0;
 BITMAP *g_page = NULL;
 BITMAP *g_page_tmp = NULL;
 
-
-void ft_event_update(s_event *event);
-
-void ft_event_update(s_event *event)
-{
-    static s_event old;
-    int i;
-
-    event->mousePosPxl.x = mouse_x;
-    event->mousePosPxl.y = mouse_y;
-
-    event->mousePosCoord.x = ft_pxl_to_coord(mouse_x, event->zoom, event->offset.x);
-    event->mousePosCoord.y = ft_pxl_to_coord(mouse_y, event->zoom, event->offset.y);
-
-    event->mouseRel.x = event->mousePosCoord.x - old.mousePosCoord.x;
-    event->mouseRel.y = event->mousePosCoord.y - old.mousePosCoord.y;
-
-    if ((mouse_b & MOUSE_LEFT) != old.mouseDownLeft)
-    {
-        event->mouseDownLeft = mouse_b & MOUSE_LEFT;
-        old.mouseDownLeft = mouse_b & MOUSE_LEFT;
-        event->mouseUpLeft = !(mouse_b & MOUSE_LEFT);
-    }
-
-    if ((mouse_b & MOUSE_RIGHT) != old.mouseDownRight)
-    {
-        event->mouseDownRight = mouse_b & MOUSE_RIGHT;
-        old.mouseDownRight = mouse_b & MOUSE_RIGHT;
-        event->mouseUpRight = !(mouse_b & MOUSE_RIGHT);
-    }
-
-    for (i = 0; i < KEY_MAX; ++i)
-    {
-        if (key[i] != old.keyDown[i])
-        {
-            event->keyDown[i] = key[i];
-            old.keyDown[i] = key[i];
-        }
-    }
-
-    if (event->keyDown[KEY_ESC])
-        event->state = STATE_IDLE;
-    if (event->keyDown[KEY_A])
-        g_quit = 1;
-
-
-    old.mousePosCoord.x = event->mousePosCoord.x;
-    old.mousePosCoord.y = event->mousePosCoord.y;
-}
 
 
 int _mangled_main(void);
@@ -116,10 +68,10 @@ int main(void)
     s_event event;
     s_button buttons[BUTTON_LAST];
 
-    ft_init_allegro();
-    ft_init_buttons(buttons);
-    ft_init_form_reset(forms);
-    ft_init_event(&event);
+    ft_allegro_init();
+    ft_button_load(buttons);
+    ft_drawing_reset_forms(forms);
+    ft_event_init(&event);
 
     while (!g_quit)
     {
@@ -127,13 +79,20 @@ int main(void)
         ft_event_update(&event);
 
         /* calc */
-        ft_calc_all(&event, forms, buttons);
-
-        ft_calc_update_button_color(buttons, &event.color);
-        ft_calc_update_closer_point_or_center(&event, forms);
+        if (event.mouseDownLeft)
+            ft_button_update(&event, forms, buttons);
+        ft_event_handle(&event, forms);
+        ft_drawing_update_coord(&event);
+        ft_button_update_color(buttons, &event.color);
 
         /* draw */
-        ft_draw_all(&event, forms, buttons);
+        clear_to_color(g_page, makecol(255, 255, 255));
+
+        ft_form_draw_all(forms, &event);
+        ft_drawing_draw_tmp_form(&event);
+        ft_form_draw_hovered(&event, forms);
+        ft_button_draw_all(buttons, &event);
+
         acquire_screen();
         blit(g_page, screen, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         release_screen();
