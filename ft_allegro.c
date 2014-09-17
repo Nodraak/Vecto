@@ -4,6 +4,7 @@
 #include "constantes.h"
 #include "ft_allegro.h"
 
+
 void ft_allegro_scale_coord(double zoom, s_vector offset, int *x1, int *y1, int *x2, int *y2)
 {
     *x1 = ft_coord_to_pxl(*x1, zoom, offset.x);
@@ -19,7 +20,7 @@ void close_button_handler(void)
 }
 
 
-void ft_allegro_init(void)
+void ft_allegro_init(s_drawing *drawing)
 {
     if (allegro_init() != 0)
         exit(EXIT_FAILURE);
@@ -38,14 +39,14 @@ void ft_allegro_init(void)
     set_close_button_callback(close_button_handler);
     show_mouse(screen);
 
-    g_page = create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
-    if (g_page == NULL)
+    drawing->g_page = create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
+    if (drawing->g_page == NULL)
     {
         fprintf(stderr, "Error create tmp screen.\n");
         exit(EXIT_FAILURE);
     }
-    g_page_tmp = create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
-    if (g_page_tmp == NULL)
+    drawing->g_page_tmp = create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
+    if (drawing->g_page_tmp == NULL)
     {
         fprintf(stderr, "Error create tmp screen.\n");
         exit(EXIT_FAILURE);
@@ -53,10 +54,10 @@ void ft_allegro_init(void)
 }
 
 
-void ft_allegro_line(BITMAP *bmp, s_event *event, int x1, int y1, int x2, int y2, int c, int flags)
+void ft_allegro_line(BITMAP *bmp, s_drawing *drawing, int x1, int y1, int x2, int y2, int c, int flags)
 {
     if (flags & FLAG_SCALE_COORD)
-        ft_allegro_scale_coord(event->zoom, event->offset, &x1, &y1, &x2, &y2);
+        ft_allegro_scale_coord(drawing->zoom, drawing->offset, &x1, &y1, &x2, &y2);
 
     line(bmp, x1, y1, x2, y2, c);
     if (flags & FLAG_FAT_LINE)
@@ -69,9 +70,9 @@ void ft_allegro_line(BITMAP *bmp, s_event *event, int x1, int y1, int x2, int y2
 }
 
 
-void ft_allegro_rect(BITMAP *bmp, s_event *event, int x1, int y1, int x2, int y2, int c)
+void ft_allegro_rect(BITMAP *bmp, s_drawing *drawing, int x1, int y1, int x2, int y2, int c)
 {
-    ft_allegro_scale_coord(event->zoom, event->offset, &x1, &y1, &x2, &y2);
+    ft_allegro_scale_coord(drawing->zoom, drawing->offset, &x1, &y1, &x2, &y2);
     rect(bmp, x1, y1, x2, y2, c);
 }
 

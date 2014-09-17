@@ -53,55 +53,56 @@ Doc -> http://alleg.sourceforge.net/stabledocs/en/allegro.html
 
 
 int g_quit = 0;
-BITMAP *g_page = NULL;
-BITMAP *g_page_tmp = NULL;
-
 
 
 int _mangled_main(void);
 int __attribute__((__stdcall__)) WinMain(void *hInst, void *hPrev, char *Cmd, int nShow);
 
 
+/*
+    s_drawing *drawing, s_event *event, s_button *buttons
+*/
+
 int main(void)
 {
-    s_form *forms[NB_FORM] = {0};
+    s_drawing drawing;
     s_event event;
     s_button buttons[BUTTON_LAST];
 
-    ft_allegro_init();
-    ft_button_load(buttons);
-    ft_drawing_reset_forms(forms);
+    ft_allegro_init(&drawing);
+    ft_drawing_init(&drawing);
     ft_event_init(&event);
+    ft_button_load(buttons);
 
     while (!g_quit)
     {
         /* event */
-        ft_event_update(&event);
+        ft_event_update(&drawing, &event);
 
         /* calc */
         if (event.mouseDownLeft)
-            ft_button_update(&event, forms, buttons);
-        ft_event_handle(&event, forms);
-        ft_drawing_update_coord(&event);
-        ft_button_update_color(buttons, &event.color);
+            ft_button_update(&drawing, &event, buttons);
+        ft_event_handle(&drawing, &event);
+        ft_drawing_update_coord(&drawing, &event);
+        ft_button_update_color(buttons, &drawing.color);
 
         /* draw */
-        clear_to_color(g_page, makecol(255, 255, 255));
+        clear_to_color(drawing.g_page, makecol(255, 255, 255));
 
-        ft_form_draw_all(forms, &event);
-        ft_drawing_draw_tmp_form(&event);
-        ft_form_draw_hovered(&event, forms);
-        ft_button_draw_all(buttons, &event);
+        ft_form_draw_all(drawing.forms, &drawing);
+        ft_drawing_draw_tmp_form(&drawing, &event);
+        ft_form_draw_hovered(&drawing);
+        ft_button_draw_all(&drawing, &event, buttons);
 
         acquire_screen();
-        blit(g_page, screen, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        blit(drawing.g_page, screen, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         release_screen();
 
         rest(1000/FPS);
     }
 
-    destroy_bitmap(g_page);
-    destroy_bitmap(g_page_tmp);
+    destroy_bitmap(drawing.g_page);
+    destroy_bitmap(drawing.g_page_tmp);
     allegro_exit();
 
     return EXIT_SUCCESS;

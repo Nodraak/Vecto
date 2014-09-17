@@ -65,42 +65,42 @@ void ft_button_update_color(s_button *buttons, s_color *color)
 }
 
 
-int ft_button_update(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
+int ft_button_update(s_drawing *drawing, s_event *event, s_button *buttons)
 {
     /* menu */
     if (ft_button_is_vector_in_rect(&buttons[BUTTON_NEW].pos, &event->mousePosPxl))
-        ft_drawing_reset_forms(forms);
+        ft_drawing_reset_forms(drawing);
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_LOAD].pos, &event->mousePosPxl))
-        ft_drawing_load(forms);
+        ft_drawing_load(drawing);
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_SAVE].pos, &event->mousePosPxl))
-        ft_drawing_save(forms);
-    /* form */
+        ft_drawing_save(drawing);
+    /* actionType */
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_EDIT_POINT].pos, &event->mousePosPxl))
-        event->form = FORM_EDIT_POINT;
+        drawing->actionType = ACTION_TYPE_EDIT_POINT;
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_EDIT_FORM].pos, &event->mousePosPxl))
-        event->form = FORM_EDIT_FORM;
+        drawing->actionType = ACTION_TYPE_EDIT_FORM;
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_LINE].pos, &event->mousePosPxl))
-        event->form = FORM_LINE;
+        drawing->actionType = ACTION_TYPE_LINE;
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_POLYGON].pos, &event->mousePosPxl))
-        event->form = FORM_POLYGON;
+        drawing->actionType = ACTION_TYPE_POLYGON;
     /* colors */
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_R_MINUS].pos, &event->mousePosPxl))
-        event->color.r -= COLOR_STEP;
+        drawing->color.r -= COLOR_STEP;
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_R_PLUS].pos, &event->mousePosPxl))
-        event->color.r += COLOR_STEP;
+        drawing->color.r += COLOR_STEP;
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_G_MINUS].pos, &event->mousePosPxl))
-        event->color.g -= COLOR_STEP;
+        drawing->color.g -= COLOR_STEP;
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_G_PLUS].pos, &event->mousePosPxl))
-        event->color.g += COLOR_STEP;
+        drawing->color.g += COLOR_STEP;
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_B_MINUS].pos, &event->mousePosPxl))
-        event->color.b -= COLOR_STEP;
+        drawing->color.b -= COLOR_STEP;
     else if (ft_button_is_vector_in_rect(&buttons[BUTTON_B_PLUS].pos, &event->mousePosPxl))
-        event->color.b += COLOR_STEP;
+        drawing->color.b += COLOR_STEP;
     else
         return 0;
 
     /* for all */
-    event->state = STATE_IDLE;
+    drawing->actionState = STATE_IDLE;
     event->mouseDownLeft = 0;
     event->mouseUpLeft = 0;
     event->mouseDownRight = 0;
@@ -110,7 +110,7 @@ int ft_button_update(s_event *event, s_form *forms[NB_FORM], s_button *buttons)
 }
 
 
-void ft_button_draw_all(s_button *buttons, s_event *event)
+void ft_button_draw_all(s_drawing *drawing, s_event *event, s_button *buttons)
 {
     int i;
     char tmp[1024];
@@ -121,25 +121,25 @@ void ft_button_draw_all(s_button *buttons, s_event *event)
 
         /* bg */
         if (ft_button_is_vector_in_rect(pos, &event->mousePosPxl))
-            rectfill(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, buttons[i].colorBackgroundHover);
+            rectfill(drawing->g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, buttons[i].colorBackgroundHover);
         else
-            rectfill(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, buttons[i].colorBackgroundDefault);
+            rectfill(drawing->g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, buttons[i].colorBackgroundDefault);
 
-        rect(g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, makecol(128, 128, 128));
+        rect(drawing->g_page, pos->x, pos->y, pos->x+pos->width, pos->y+pos->height, makecol(128, 128, 128));
 
         /* text */
-        textout_centre_ex(g_page, font, buttons[i].text, pos->x+pos->width/2, pos->y+pos->height/2-3, makecol(0, 0, 0), -1);
+        textout_centre_ex(drawing->g_page, font, buttons[i].text, pos->x+pos->width/2, pos->y+pos->height/2-3, makecol(0, 0, 0), -1);
 
         /* selected */
-        if (event->form == buttons[i].form)
-            ft_allegro_line(g_page, event, pos->x+10, pos->y+35, pos->x+90, pos->y+35, makecol(128, 128, 128), FLAG_FAT_LINE);
+        if (drawing->actionType == buttons[i].form)
+            ft_allegro_line(drawing->g_page, drawing, pos->x+10, pos->y+35, pos->x+90, pos->y+35, makecol(128, 128, 128), FLAG_FAT_LINE);
     }
 
     /* current color components */
-    sprintf(tmp, "Rouge : %d", event->color.r);
-    textout_right_ex(g_page, font, tmp, 730, 65-3, makecol(0, 0, 0), -1);
-    sprintf(tmp, "Vert : %d", event->color.g);
-    textout_right_ex(g_page, font, tmp, 730, 95-3, makecol(0, 0, 0), -1);
-    sprintf(tmp, "Bleu : %d", event->color.b);
-    textout_right_ex(g_page, font, tmp, 730, 125-3, makecol(0, 0, 0), -1);
+    sprintf(tmp, "Rouge : %d", drawing->color.r);
+    textout_right_ex(drawing->g_page, font, tmp, 730, 65-3, makecol(0, 0, 0), -1);
+    sprintf(tmp, "Vert : %d", drawing->color.g);
+    textout_right_ex(drawing->g_page, font, tmp, 730, 95-3, makecol(0, 0, 0), -1);
+    sprintf(tmp, "Bleu : %d", drawing->color.b);
+    textout_right_ex(drawing->g_page, font, tmp, 730, 125-3, makecol(0, 0, 0), -1);
 }

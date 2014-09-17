@@ -62,14 +62,14 @@ typedef enum    _e_button
     BUTTON_LAST
 }               e_button;
 
-typedef enum    _e_form
+typedef enum    _e_action_type
 {
-    FORM_NONE = 0,
-    FORM_LINE = 1,
-    FORM_POLYGON = 2,
-    FORM_EDIT_POINT = 3,
-    FORM_EDIT_FORM = 4
-}               e_form;
+    ACTION_TYPE_NONE = 0,
+    ACTION_TYPE_LINE = 1,
+    ACTION_TYPE_POLYGON = 2,
+    ACTION_TYPE_EDIT_POINT = 3,
+    ACTION_TYPE_EDIT_FORM = 4
+}               e_action_type;
 
 /* basic */
 
@@ -102,18 +102,19 @@ typedef struct      _s_button
     char            text[1024];
     int             colorBackgroundDefault;
     int             colorBackgroundHover;
-    e_form          form;
+    e_action_type   form;
 }                   s_button;
 
 
 typedef struct      _s_form
 {
-    e_form          type;
+    e_action_type   type;
     int             nb_point;
     s_vector        point[NB_POINT];
     s_vector        center;
     s_color         color;
 }                   s_form;
+
 
 typedef struct      _s_event
 {
@@ -125,50 +126,30 @@ typedef struct      _s_event
     int             mouseUpLeft;
     int             mouseUpRight;
     int             keyDown[KEY_MAX];
-
-    e_state         state;
-    e_form          form;
-    s_form          current;
-    s_color         color;
-
-    s_vector        *editPoint;
-    int             formId;
-
-    s_vector        offset;
-    double          zoom;
 }                   s_event;
 
-/*
 
-in
-    s_vector        mousePosPxl;
-    s_vector        mousePosCoord;
-    s_vector        mouseRel;
-    int             mouseDownLeft;
-    int             mouseDownRight;
-    int             mouseUpLeft;
-    int             mouseUpRight;
-    int             keyDown[KEY_MAX];
+typedef struct      _s_drawing
+{
+    s_form          *forms[NB_FORM];
 
-drawing
-    s_forms         *forms[NB_FORM];
-
-    e_state         state;          actionState
-    e_form          form;           actionType
+    e_state         actionState;
+    e_action_type   actionType;
 
     s_vector        *editPoint;
-    int             formId;         editFormId
-    s_form          current;        drawingForm
+    int             editFormId;
+    s_form          drawingForm;
 
     s_color         color;
 
     s_vector        offset;
     double          zoom;
 
-*/
+    BITMAP          *g_page;
+    BITMAP          *g_page_tmp;
+}                   s_drawing;
 
 extern int g_quit;
-extern BITMAP *g_page;
-extern BITMAP *g_page_tmp;
+
 
 #endif /* CONSTANTES_H_INCLUDED */

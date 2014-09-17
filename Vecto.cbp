@@ -53,23 +53,27 @@
 			<Add option="-Wall" />
 			<Add option="-g" />
 		</Compiler>
-		<Unit filename="calc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="calc.h" />
 		<Unit filename="constantes.h" />
-		<Unit filename="draw.c">
+		<Unit filename="ft_allegro.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="draw.h" />
-		<Unit filename="file.c">
+		<Unit filename="ft_allegro.h" />
+		<Unit filename="ft_button.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="file.h" />
-		<Unit filename="init.c">
+		<Unit filename="ft_button.h" />
+		<Unit filename="ft_drawing.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="init.h" />
+		<Unit filename="ft_drawing.h" />
+		<Unit filename="ft_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ft_event.h" />
+		<Unit filename="ft_form.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ft_form.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>

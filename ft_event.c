@@ -10,31 +10,20 @@
 void ft_event_init(s_event *event)
 {
     memset(event, 0, sizeof(s_event));
-
-    event->state = STATE_IDLE;
-    event->form = FORM_LINE;
-    event->color.r = 120;
-    event->color.g = 120;
-    event->color.b = 120;
-    event->offset.x = 0;
-    event->offset.y = 0;
-    event->zoom = 1;
-
-    event->formId = -1;
 }
 
 
-void ft_event_update(s_event *event)
+void ft_event_update(s_drawing *drawing, s_event *event)
 {
     static s_event old;
-    static int mouse_prev;
+    static int mouse_prev = ~0;
     int i, mouse_now, mouse_click, mouse_unclick;
 
     event->mousePosPxl.x = mouse_x;
     event->mousePosPxl.y = mouse_y;
 
-    event->mousePosCoord.x = ft_pxl_to_coord(mouse_x, event->zoom, event->offset.x);
-    event->mousePosCoord.y = ft_pxl_to_coord(mouse_y, event->zoom, event->offset.y);
+    event->mousePosCoord.x = ft_pxl_to_coord(mouse_x, drawing->zoom, drawing->offset.x);
+    event->mousePosCoord.y = ft_pxl_to_coord(mouse_y, drawing->zoom, drawing->offset.y);
 
     event->mouseRel.x = event->mousePosCoord.x - old.mousePosCoord.x;
     event->mouseRel.y = event->mousePosCoord.y - old.mousePosCoord.y;
@@ -59,7 +48,7 @@ void ft_event_update(s_event *event)
     }
 
     if (event->keyDown[KEY_ESC])
-        event->state = STATE_IDLE;
+        drawing->actionState = STATE_IDLE;
     if (event->keyDown[KEY_A])
         g_quit = 1;
 
@@ -80,71 +69,71 @@ void ft_swap(s_form **ptr1, s_form **ptr2)
 }
 
 
-int ft_event_handle(s_event *event, s_form *forms[NB_FORM])
+int ft_event_handle(s_drawing *drawing, s_event *event)
 {
-    if (event->form == FORM_LINE)
+    if (drawing->actionType == ACTION_TYPE_LINE)
     {
         if (event->mouseDownLeft)
         {
-            if (event->state == STATE_IDLE)
+            if (drawing->actionState == STATE_IDLE)
             {
-                event->current.nb_point = 1;
-                event->current.point[0].x = event->mousePosCoord.x;
-                event->current.point[0].y = event->mousePosCoord.y;
+                drawing->drawingForm.nb_point = 1;
+                drawing->drawingForm.point[0].x = event->mousePosCoord.x;
+                drawing->drawingForm.point[0].y = event->mousePosCoord.y;
 
-                event->state = STATE_IN_ACTION;
+                drawing->actionState = STATE_IN_ACTION;
                 event->mouseDownLeft = 0;
             }
-            else if (event->state == STATE_IN_ACTION)
+            else if (drawing->actionState == STATE_IN_ACTION)
             {
                 s_form *ptr = ft_form_alloc();
 
-                ptr->point[0].x = event->current.point[0].x;
-                ptr->point[0].y = event->current.point[0].y;
+                ptr->point[0].x = drawing->drawingForm.point[0].x;
+                ptr->point[0].y = drawing->drawingForm.point[0].y;
                 ptr->point[1].x = event->mousePosCoord.x;
                 ptr->point[1].y = event->mousePosCoord.y;
                 ptr->nb_point = 2;
-                ptr->type = FORM_LINE;
-                memcpy(&ptr->color, &event->color, sizeof(s_color));
+                ptr->type = ACTION_TYPE_LINE;
+                memcpy(&ptr->color, &drawing->color, sizeof(s_color));
                 ptr->center = ft_form_get_center(ptr);
 
-                ft_drawing_add_form(forms, ptr);
+                ft_drawing_add_form(drawing->forms, ptr);
 
-                event->state = STATE_IDLE;
+                drawing->actionState = STATE_IDLE;
                 event->mouseDownLeft = 0;
             }
         }
     }
-    else if (event->form == FORM_POLYGON)
+    else if (drawing->actionType == ACTION_TYPE_POLYGON)
     {
         if (event->mouseDownLeft)
         {
-            if (event->state == STATE_IDLE)
+            if (drawing->actionState == STATE_IDLE)
             {
-                event->current.nb_point = 1;
-                event->current.point[0].x = event->mousePosCoord.x;
-                event->current.point[0].y = event->mousePosCoord.y;
+                drawing->drawingForm.nb_point = 1;
+                drawing->drawingForm.point[0].x = event->mousePosCoord.x;
+                drawing->drawingForm.point[0].y = event->mousePosCoord.y;
 
-                event->state = STATE_IN_ACTION;
+                drawing->actionState = STATE_IN_ACTION;
                 event->mouseDownLeft = 0;
             }
-            else if (event->state == STATE_IN_ACTION)
+            else if (drawing->actionState == STATE_IN_ACTION)
             {
-                event->current.point[event->current.nb_point].x = event->mousePosCoord.x;
-                event->current.point[event->current.nb_point].y = event->mousePosCoord.y;
-                event->current.nb_point ++;
+                drawing->drawingForm.point[drawing->drawingForm.nb_point].x = event->mousePosCoord.x;
+                drawing->drawingForm.point[drawing->drawingForm.nb_point].y = event->mousePosCoord.y;
+                drawing->drawingForm.nb_point ++;
 
                 event->mouseDownLeft = 0;
             }
         }
         else if (event->mouseDownRight)
         {
-            if (event->state == STATE_IN_ACTION)
+            if (drawing->actionState == STATE_IN_ACTION)
             {
                 /* cancel drawing */
-                if (event->current.nb_point < 2)
+                if (drawing->drawingForm.nb_point < 2)
                 {
-                    event->state = STATE_IDLE;
+                    drawing->actionState = STATE_IDLE;
                     event->mouseDownRight = 0;
                     return 1;
                 }
@@ -153,91 +142,92 @@ int ft_event_handle(s_event *event, s_form *forms[NB_FORM])
                     int j;
                     s_form *ptr = ft_form_alloc();
 
-                    for (j = 0; j < event->current.nb_point; ++j)
+                    for (j = 0; j < drawing->drawingForm.nb_point; ++j)
                     {
-                        ptr->point[j].x = event->current.point[j].x;
-                        ptr->point[j].y = event->current.point[j].y;
+                        ptr->point[j].x = drawing->drawingForm.point[j].x;
+                        ptr->point[j].y = drawing->drawingForm.point[j].y;
                     }
 
-                    ptr->point[event->current.nb_point].x = event->mousePosCoord.x;
-                    ptr->point[event->current.nb_point].y = event->mousePosCoord.y;
-                    ptr->nb_point = event->current.nb_point+1;
-                    ptr->type = FORM_POLYGON;
-                    memcpy(&ptr->color, &event->color, sizeof(s_color));
+                    ptr->point[drawing->drawingForm.nb_point].x = event->mousePosCoord.x;
+                    ptr->point[drawing->drawingForm.nb_point].y = event->mousePosCoord.y;
+                    ptr->nb_point = drawing->drawingForm.nb_point+1;
+                    ptr->type = ACTION_TYPE_POLYGON;
+                    memcpy(&ptr->color, &drawing->color, sizeof(s_color));
                     ptr->center = ft_form_get_center(ptr);
 
-                    ft_drawing_add_form(forms, ptr);
+                    ft_drawing_add_form(drawing->forms, ptr);
 
-                    event->state = STATE_IDLE;
+                    drawing->actionState = STATE_IDLE;
                     event->mouseDownRight = 0;
                 }
             }
         }
     }
-    else if (event->form == FORM_EDIT_POINT)
+    else if (drawing->actionType == ACTION_TYPE_EDIT_POINT)
     {
         if (event->mouseUpLeft)
         {
             event->mouseDownLeft = 0;
 
-            event->state = STATE_IDLE;
+            drawing->actionState = STATE_IDLE;
             event->mouseUpLeft = 0;
         }
         else if (event->mouseDownLeft)
         {
-            if (event->state == STATE_IDLE)
+            if (drawing->actionState == STATE_IDLE)
             {
-                event->state = STATE_IN_ACTION;
+                drawing->actionState = STATE_IN_ACTION;
             }
-            else if (event->state == STATE_IN_ACTION)
+            else if (drawing->actionState == STATE_IN_ACTION)
             {
-                if (event->editPoint != NULL)
+                if (drawing->editPoint != NULL)
                 {
                     int i;
 
-                    event->editPoint->x += event->mouseRel.x;
-                    event->editPoint->y += event->mouseRel.y;
+                    drawing->editPoint->x += event->mouseRel.x;
+                    drawing->editPoint->y += event->mouseRel.y;
 
                     for (i = 0; i < NB_FORM; ++i)
                     {
-                        if (forms[i] != NULL)
-                            forms[i]->center = ft_form_get_center(forms[i]);
+                        if (drawing->forms[i] != NULL)
+                            drawing->forms[i]->center = ft_form_get_center(drawing->forms[i]);
                     }
                 }
             }
         }
 
-        if (event->state == STATE_IDLE)
-            event->editPoint = ft_drawing_get_closer_point(forms, &event->mousePosCoord, event->zoom);
+        if (drawing->actionState == STATE_IDLE)
+            drawing->editPoint = ft_drawing_get_closer_point(drawing->forms, &event->mousePosCoord, drawing->zoom);
     }
-    else if (event->form == FORM_EDIT_FORM)
+    else if (drawing->actionType == ACTION_TYPE_EDIT_FORM)
     {
         if (event->mouseUpLeft)
         {
             event->mouseDownLeft = 0;
 
-            event->state = STATE_IDLE;
+            drawing->actionState = STATE_IDLE;
             event->mouseUpLeft = 0;
         }
         else if (event->mouseDownLeft)
         {
-            if (event->state == STATE_IDLE)
+            if (drawing->actionState == STATE_IDLE)
             {
-                event->state = STATE_IN_ACTION;
+                drawing->actionState = STATE_IN_ACTION;
             }
-            else if (event->state == STATE_IN_ACTION)
+            else if (drawing->actionState == STATE_IN_ACTION)
             {
-                if (event->formId != -1)
+                if (drawing->editFormId != -1)
                 {
-                    int i, id = event->formId;
+                    int i;
+                    s_form *ptr = drawing->forms[drawing->editFormId];
 
-                    for (i = 0; i < forms[id]->nb_point; ++i)
+                    for (i = 0; i < ptr->nb_point; ++i)
                     {
-                        forms[id]->point[i].x += event->mouseRel.x;
-                        forms[id]->point[i].y += event->mouseRel.y;
+                        ptr->point[i].x += event->mouseRel.x;
+                        ptr->point[i].y += event->mouseRel.y;
                     }
 
-                    forms[id]->center = ft_form_get_center(forms[id]);
+                    ptr->center = ft_form_get_center(ptr);
                 }
             }
         }
@@ -245,20 +235,21 @@ int ft_event_handle(s_event *event, s_form *forms[NB_FORM])
         {
             event->mouseDownRight = 0;
 
-            event->state = STATE_IDLE;
+            drawing->actionState = STATE_IDLE;
             event->mouseUpRight = 0;
         }
         else if (event->mouseDownRight)
         {
-            if (event->state == STATE_IDLE)
+            if (drawing->actionState == STATE_IDLE)
             {
-                event->state = STATE_IN_ACTION;
+                drawing->actionState = STATE_IN_ACTION;
             }
-            else if (event->state == STATE_IN_ACTION)
+            else if (drawing->actionState == STATE_IN_ACTION)
             {
-                if (event->formId != -1)
+                if (drawing->editFormId != -1)
                 {
                     int i;
+                    s_form *ptr = drawing->forms[drawing->editFormId];
 
                     double angleMouseOld = atan2(event->mousePosCoord.y - event->mouseRel.y, event->mousePosCoord.x - event->mouseRel.x);
                     double angleMouseNew = atan2(event->mousePosCoord.y, event->mousePosCoord.x);
@@ -270,19 +261,19 @@ int ft_event_handle(s_event *event, s_form *forms[NB_FORM])
                     printf("\n===\n\n");
                     */
 
-                    forms[event->formId]->center = ft_form_get_center(forms[event->formId]);
+                    ptr->center = ft_form_get_center(ptr);
 
                     /*
-                    printf("center : x=%.0f y=%.0f\n", forms[event->formId]->center.x, forms[event->formId]->center.y);
+                    printf("center : x=%.0f y=%.0f\n", forms[event->actionTypeId]->center.x, forms[event->actionTypeId]->center.y);
                     */
 
-                    for (i = 0; i < forms[event->formId]->nb_point; ++i)
+                    for (i = 0; i < ptr->nb_point; ++i)
                     {
-                        double diffX = forms[event->formId]->point[i].x - forms[event->formId]->center.x;
-                        double diffY = forms[event->formId]->point[i].y - forms[event->formId]->center.y;
+                        double diffX = ptr->point[i].x - ptr->center.x;
+                        double diffY = ptr->point[i].y - ptr->center.y;
 
                         /*
-                        printf("point : x=%.0f y=%.0f\n", forms[event->formId]->point[i].x, forms[event->formId]->point[i].y);
+                        printf("point : x=%.0f y=%.0f\n", forms[event->actionTypeId]->point[i].x, forms[event->actionTypeId]->point[i].y);
                         printf("diff : x=%.0f y=%.0f\n", diffX, diffY);
                         */
 
@@ -293,15 +284,15 @@ int ft_event_handle(s_event *event, s_form *forms[NB_FORM])
                         printf("angleOld=%.3f radius=%.1f\n", angleOld*180, radius);
                         */
 
-                        int newX = cos(angleOld + angleDiff) * radius + forms[event->formId]->center.x;
-                        int newY = sin(angleOld + angleDiff) * radius + forms[event->formId]->center.y;
+                        int newX = cos(angleOld + angleDiff) * radius + ptr->center.x;
+                        int newY = sin(angleOld + angleDiff) * radius + ptr->center.y;
 
                         /*
                         printf("newX=%d newY=%d\n", newX, newY);
                         */
 
-                        forms[event->formId]->point[i].x = newX;
-                        forms[event->formId]->point[i].y = newY;
+                        ptr->point[i].x = newX;
+                        ptr->point[i].y = newY;
 
                         /*
                         printf("\n");
@@ -311,45 +302,45 @@ int ft_event_handle(s_event *event, s_form *forms[NB_FORM])
             }
         }
 
-        if (event->state == STATE_IDLE)
-            event->formId = ft_drawing_get_closer_center(forms, &event->mousePosCoord, event->zoom);
+        if (drawing->actionState == STATE_IDLE)
+            drawing->editFormId = ft_drawing_get_closer_center(drawing->forms, &event->mousePosCoord, drawing->zoom);
 
         /* keyboard shortcuts */
-        if (event->state == STATE_IDLE)
+        if (drawing->actionState == STATE_IDLE)
         {
             /* delete */
-            if (event->keyDown[KEY_S] && event->formId != -1)
+            if (event->keyDown[KEY_S] && drawing->editFormId != -1)
             {
                 /* in forms tab */
-                free(forms[event->formId]);
-                forms[event->formId] = NULL;
+                free(drawing->forms[drawing->editFormId]);
+                drawing->forms[drawing->editFormId] = NULL;
                 /* working form */
-                event->formId = -1;
+                drawing->editFormId = -1;
 
                 event->keyDown[KEY_S] = 0;
             }
             /* move to background */
-            else if (event->keyDown[KEY_R] && event->formId != -1 && event->formId > 0)
+            else if (event->keyDown[KEY_R] && drawing->editFormId != -1 && drawing->editFormId > 0)
             {
-                ft_swap(&forms[event->formId], &forms[event->formId-1]);
-                event->formId --;
+                ft_swap(&drawing->forms[drawing->editFormId], &drawing->forms[drawing->editFormId-1]);
+                drawing->editFormId --;
                 event->keyDown[KEY_R] = 0;
             }
             /* move to foreground */
-            else if (event->keyDown[KEY_Q] && event->formId != -1 && event->formId < NB_FORM-1)
+            else if (event->keyDown[KEY_Q] && drawing->editFormId != -1 && drawing->editFormId < NB_FORM-1)
             {
-                ft_swap(&forms[event->formId], &forms[event->formId+1]);
-                event->formId ++;
+                ft_swap(&drawing->forms[drawing->editFormId], &drawing->forms[drawing->editFormId+1]);
+                drawing->editFormId ++;
                 event->keyDown[KEY_Q] = 0;
             }
             /* copy */
-            else if (event->keyDown[KEY_D] && event->formId != -1)
+            else if (event->keyDown[KEY_D] && drawing->editFormId != -1)
             {
                 int i = 0;
                 s_form *ptr = NULL;
 
                 ptr = ft_form_alloc();
-                memcpy(ptr, forms[event->formId], sizeof(s_form));
+                memcpy(ptr, drawing->forms[drawing->editFormId], sizeof(s_form));
 
                 for (i = 0; i < ptr->nb_point; ++i)
                 {
@@ -358,7 +349,7 @@ int ft_event_handle(s_event *event, s_form *forms[NB_FORM])
                 }
                 ptr->center = ft_form_get_center(ptr);
 
-                ft_drawing_add_form(forms, ptr);
+                ft_drawing_add_form(drawing->forms, ptr);
 
                 event->keyDown[KEY_D] = 0;
             }

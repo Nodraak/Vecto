@@ -41,7 +41,7 @@ s_vector ft_form_get_center(s_form *form)
 }
 
 
-void ft_form_draw_all(s_form *forms[NB_FORM], s_event *event)
+void ft_form_draw_all(s_form *forms[NB_FORM], s_drawing *drawing)
 {
     int i;
 
@@ -49,39 +49,41 @@ void ft_form_draw_all(s_form *forms[NB_FORM], s_event *event)
     {
         if (forms[i] != NULL)
         {
-            if (forms[i]->type == FORM_POLYGON)
-                ft_form_draw_polygon(forms[i], event);
-            else if (forms[i]->type == FORM_LINE)
-                ft_form_draw_line(forms[i], event);
+            if (forms[i]->type == ACTION_TYPE_POLYGON)
+                ft_form_draw_polygon(forms[i], drawing);
+            else if (forms[i]->type == ACTION_TYPE_LINE)
+                ft_form_draw_line(forms[i], drawing);
         }
     }
 }
 
-void ft_form_draw_hovered(s_event *event, s_form *forms[NB_FORM])
+void ft_form_draw_hovered(s_drawing *drawing)
 {
-    if (event->form == FORM_EDIT_POINT)
+    if (drawing->actionType == ACTION_TYPE_EDIT_POINT)
     {
-        if (event->editPoint != NULL)
+        if (drawing->editPoint != NULL)
         {
-            ft_allegro_rect(g_page, event,
-                 event->editPoint->x-5, event->editPoint->y-5,
-                 event->editPoint->x+5, event->editPoint->y+5,
+            ft_allegro_rect(drawing->g_page, drawing,
+                 drawing->editPoint->x-5, drawing->editPoint->y-5,
+                 drawing->editPoint->x+5, drawing->editPoint->y+5,
                  makecol(150, 0, 0));
         }
     }
-    else if (event->form == FORM_EDIT_FORM)
+    else if (drawing->actionType == ACTION_TYPE_EDIT_FORM)
     {
-        if (event->formId != -1)
+        if (drawing->editFormId != -1)
         {
-            ft_allegro_rect(g_page, event,
-                 forms[event->formId]->center.x-5, forms[event->formId]->center.y-5,
-                 forms[event->formId]->center.x+5, forms[event->formId]->center.y+5,
+            s_vector *center = &drawing->forms[drawing->editFormId]->center;
+
+            ft_allegro_rect(drawing->g_page, drawing,
+                 center->x-5, center->y-5,
+                 center->x+5, center->y+5,
                  makecol(150, 0, 0));
         }
     }
 }
 
-void ft_form_draw_line(s_form *form, s_event *event)
+void ft_form_draw_line(s_form *form, s_drawing *drawing)
 {
     int i, colorWanted;
     s_vector *p1 = NULL, *p2 = NULL;
@@ -93,40 +95,40 @@ void ft_form_draw_line(s_form *form, s_event *event)
         p1 = &form->point[i];
         p2 = &form->point[i+1];
 
-        ft_allegro_line(g_page, event, p1->x, p1->y, p2->x, p2->y, colorWanted, FLAG_FAT_LINE | FLAG_SCALE_COORD);
+        ft_allegro_line(drawing->g_page, drawing, p1->x, p1->y, p2->x, p2->y, colorWanted, FLAG_FAT_LINE | FLAG_SCALE_COORD);
     }
 }
 
 
-void ft_form_draw_polygon(s_form *form, s_event *event)
+void ft_form_draw_polygon(s_form *form, s_drawing *drawing)
 {
     int i;
     s_vector *p1 = NULL, *p2 = NULL;
     int colorWanted = makecol(form->color.r, form->color.g, form->color.b);
     int colorAlpha = makecol(255, 0, 255);
 
-    clear_to_color(g_page_tmp, colorWanted);
+    clear_to_color(drawing->g_page_tmp, colorWanted);
 
     for (i = 0; i < form->nb_point-1; ++i)
     {
         p1 = &form->point[i];
         p2 = &form->point[i+1];
 
-        ft_allegro_line(g_page_tmp, event, p1->x, p1->y, p2->x, p2->y, colorAlpha, FLAG_SCALE_COORD);
+        ft_allegro_line(drawing->g_page_tmp, drawing, p1->x, p1->y, p2->x, p2->y, colorAlpha, FLAG_SCALE_COORD);
     }
 
     /* closing line */
     p1 = &form->point[0];
     p2 = &form->point[form->nb_point-1];
 
-    ft_allegro_line(g_page_tmp, event, p1->x, p1->y, p2->x, p2->y, colorAlpha, FLAG_SCALE_COORD);
+    ft_allegro_line(drawing->g_page_tmp, drawing, p1->x, p1->y, p2->x, p2->y, colorAlpha, FLAG_SCALE_COORD);
 
     /* TODO : upgrade this dirty hack */
-    floodfill(g_page_tmp, 0, 0, colorAlpha);
-    floodfill(g_page_tmp, 0, SCREEN_HEIGHT-1, colorAlpha);
-    floodfill(g_page_tmp, SCREEN_WIDTH-1, 0, colorAlpha);
-    floodfill(g_page_tmp, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, colorAlpha);
+    floodfill(drawing->g_page_tmp, 0, 0, colorAlpha);
+    floodfill(drawing->g_page_tmp, 0, SCREEN_HEIGHT-1, colorAlpha);
+    floodfill(drawing->g_page_tmp, SCREEN_WIDTH-1, 0, colorAlpha);
+    floodfill(drawing->g_page_tmp, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, colorAlpha);
 
-    masked_blit(g_page_tmp, g_page, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    masked_blit(drawing->g_page_tmp, drawing->g_page, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
